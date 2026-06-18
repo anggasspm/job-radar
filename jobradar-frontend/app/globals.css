@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+html {
+  scrollbar-gutter: stable;
+}
+
+@theme {
+  --color-ink: #14213D;
+  --color-canvas: #F7F8FA;
+  --color-coral: #FF6B4A;
+  --color-coral-dark: #E5532F;
+  --color-teal: #2EC4B6;
+  --color-line: #E2E5EA;
+}
+
+@theme inline {
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+@keyframes radar-pulse {
+  0% { transform: scale(0.7); opacity: 0.5; }
+  80% { opacity: 0.08; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.radar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid #FF6B4A;
+  animation: radar-pulse 2.8s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+.radar-ring:nth-child(2) { animation-delay: 0.9s; }
+.radar-ring:nth-child(3) { animation-delay: 1.8s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-ring { animation: none; opacity: 0; }
+}
