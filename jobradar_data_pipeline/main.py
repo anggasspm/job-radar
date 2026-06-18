@@ -3,26 +3,20 @@ from processor.normalizer import normalize_job_data
 from database.db_manager import save_jobs
 
 def run_pipeline():
-    print("--- Memulai JobRadar Data Pipeline ---")
+    print("--- Memulai Uji Coba JobRadar Data Pipeline ---")
     
-    # 1. Ekstrak
-    raw_data_a = scrape_source_a()
-    # raw_data_b = scrape_source_b()
+    # 1. Ekstrak data dari Sumber A
+    raw_data = scrape_source_a()
     
-    all_raw_data = raw_data_a # + raw_data_b
-    
-    # 2. Transformasi / Normalisasi
-    clean_data = []
-    for data in all_raw_data:
-        cleaned = normalize_job_data(data)
-        clean_data.append(cleaned)
-        
-    # 3. Load / Simpan
-    if clean_data:
-        save_jobs(clean_data)
-        
-    print("--- Pipeline Selesai ---")
+    # Tampilkan hasil sementara
+    print(f"Data yang berhasil ditarik: {len(raw_data)} item")
+    if raw_data:
+        print(raw_data[0]) # Cek isi data pertama
+
+if __name__ == "__main__":
+    run_pipeline()
 
 if __name__ == "__main__":
     # Script ini bisa dieksekusi oleh Cron Job setiap beberapa jam
     run_pipeline()
+
