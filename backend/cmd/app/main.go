@@ -2,21 +2,20 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/anggasspm/job-radar/backend/config"
+	"github.com/anggasspm/job-radar/backend/internal/api"
 )
 
 func main() {
-	r := gin.Default()
+	cfg, err := config.SetupEnv()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-
-	if err := r.Run(); err != nil {
-		log.Fatalf("failed to run server: %v", err)
+	if err != nil {
+		log.Fatalf("Config file is not loaded properly %v\n", err)
 	}
+
+	log.Println("Starting application...")
+
+	api.StartServer(cfg)
+
 }
