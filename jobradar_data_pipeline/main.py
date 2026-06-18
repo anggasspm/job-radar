@@ -1,6 +1,7 @@
 import json
 from scrapers.source_a import scrape_glints_graphql
 from scrapers.source_b import scrape_source_b
+from scrapers.source_c import scrape_source_c
 from processor.normalizer import normalize_job_data
 
 def run_pipeline():
@@ -11,9 +12,10 @@ def run_pipeline():
     
     raw_data_glints = scrape_glints_graphql()
     raw_data_tia = scrape_source_b()
+    raw_data_wwr = scrape_source_c()
     
     # Menggabungkan semua data mentah menjadi satu list
-    all_raw_data = raw_data_glints + raw_data_tia
+    all_raw_data = raw_data_glints + raw_data_tia + raw_data_wwr
     
     if not all_raw_data:
         print("Tidak ada data yang berhasil diekstrak. Pipeline dihentikan.")
