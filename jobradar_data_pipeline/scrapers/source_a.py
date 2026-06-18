@@ -1,73 +1,127 @@
 import requests
-import xml.etree.ElementTree as ET
-import gzip
-import io
+import json
 
-def scrape_glints_sitemap():
-    print("Mulai membaca Sitemap Index Glints...")
+def scrape_glints_graphql():
+    print("Mulai mengambil data dari GraphQL API Glints...")
     
-    # URL Sitemap Index
-    index_url = "https://glints.com/sitemaps/explore-page-id-sitemap.xml" 
+    # URL persis seperti yang kamu temukan di tab Network
+    url = "https://glints.com/api/v2-alc/graphql?op=searchJobsV3"
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
     }
     
+    # Payload yang sudah disesuaikan dengan sintaks dictionary Python
+    payload = {
+        "operationName": "searchJobsV3",
+        "variables": {
+            "data": {
+                "SearchTerm": "Backend Developer",
+                "CountryCode": "ID",
+                "pageSize": 30,
+                "page": 1, # Saya ubah ke 1 agar kita mengambil halaman pertama
+                "includeExternalJobs": True # Python menggunakan huruf kapital untuk boolean
+            }
+        },
+        "query": "query searchJobsV3($data: JobSearchConditionInput!) {\n  searchJobsV3(data: $data) {\n    jobsInPage {\n      id\n      title\n      workArrangementOption\n      status\n      createdAt\n      updatedAt\n      isHot\n      isApplied\n      shouldShowSalary\n      educationLevel\n      type\n      fraudReportFlag\n      company {\n        ...CompanyFields\n        __typename\n      }\n      citySubDivision {\n        id\n        name\n        __typename\n      }\n      city {\n        ...CityFields\n        __typename\n      }\n      country {\n        ...CountryFields\n        __typename\n      }\n      salaries {\n        ...SalaryFields\n        __typename\n      }\n      location {\n        ...LocationFields\n        __typename\n      }\n      minYearsOfExperience\n      maxYearsOfExperience\n      source\n      jobSource\n      type\n      hierarchicalJobCategory {\n        id\n        level\n        name\n        children {\n          name\n          level\n          id\n          __typename\n        }\n        parents {\n          id\n          level\n          name\n          __typename\n        }\n        __typename\n      }\n      skills {\n        skill {\n          id\n          name\n          __typename\n        }\n        mustHave\n        __typename\n      }\n      traceInfo\n      __typename\n    }\n    expInfo\n    hasMore\n    __typename\n  }\n}\n\nfragment CompanyFields on Company {\n  id\n  name\n  brandName\n  logo\n  status\n  isVIP\n  IndustryId\n  industry {\n    id\n    name\n    __typename\n  }\n  verificationTier {\n    type\n    userName\n    __typename\n  }\n  __typename\n}\n\nfragment CityFields on City {\n  id\n  name\n  __typename\n}\n\nfragment CountryFields on Country {\n  code\n  name\n  __typename\n}\n\nfragment SalaryFields on JobSalary {\n  id\n  salaryType\n  salaryMode\n  maxAmount\n  minAmount\n  CurrencyCode\n  __typename\n}\n\nfragment LocationFields on HierarchicalLocation {\n  id\n  name\n  administrativeLevelName\n  formattedName\n  level\n  slug\n  latitude\n  longitude\n  parents {\n    id\n    name\n    administrativeLevelName\n    formattedName\n    level\n    slug\n    CountryCode: countryCode\n    parents {\n      level\n      formattedName\n      slug\n      __typename\n    }\n    __typename\n  }\n  __typename\n}"
+    }
+    
+    raw_jobs = []
+    
     try:
-        # --- LANGKAH 1: Ambil Sitemap Index ---
-        response = requests.get(index_url, headers=headers)
+        response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         
-        root_index = ET.fromstring(response.content)
-        namespace = {'ns': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+        data = response.json()
         
-        # Ambil URL sitemap pertama dari index (untuk testing MVP)
-        first_sitemap = root_index.find('ns:sitemap', namespace)
-        if first_sitemap is None:
-            print("Tidak menemukan tag sitemap di dalam index.")
-            return []
+        # Menavigasi struktur JSON hasil kembalian GraphQL
+        # Urutan: data -> searchJobsV3 -> jobsInPage (berupa list of dictionaries)
+        jobs_list = data.get("data", {}).get("searchJobsV3", {}).get("jobsInPage", [])
+        
+        print(f"Berhasil menarik {len(jobs_list)} lowongan!\n")
+        
+        for job in jobs_list:
+            title = job.get("title") or "Tidak ada judul"
             
-        gz_url = first_sitemap.find('ns:loc', namespace).text
-        print(f"Menemukan target sitemap terkompresi:\n-> {gz_url}")
-        
-        # --- LANGKAH 2: Unduh dan Ekstrak file .gz ---
-        print("\nMengunduh dan mengekstrak file .gz...")
-        gz_response = requests.get(gz_url, headers=headers)
-        gz_response.raise_for_status()
-        
-        # Membaca data byte terkompresi dan mengekstraknya
-        with gzip.GzipFile(fileobj=io.BytesIO(gz_response.content)) as f:
-            xml_content = f.read()
+            company_data = job.get("company") or {}
+            company = company_data.get("name") or "Perusahaan tidak diketahui"
             
-        # --- LANGKAH 3: Parsing XML yang sudah diekstrak ---
-        root = ET.fromstring(xml_content)
-        
-        job_urls = []
-        limit = 5
-        count = 0
-        
-        for url_tag in root.findall('ns:url', namespace):
-            if count >= limit:
-                break
+            # --- PERBAIKAN: WATERFALL LOCATION EXTRACTION ---
+            location_name = None
+            
+            # Prioritas 1: Ambil dari object 'location' (biasanya paling akurat/lengkap)
+            loc_data = job.get("location") or {}
+            if loc_data.get("name"):
+                location_name = loc_data.get("name")
                 
-            loc = url_tag.find('ns:loc', namespace).text
-            job_urls.append(loc)
-            count += 1
+            # Prioritas 2: Jika kosong, coba dari 'city'
+            if not location_name:
+                city_data = job.get("city") or {}
+                location_name = city_data.get("name")
                 
-        print(f"\nBerhasil mengekstrak {len(job_urls)} URL dari sub-sitemap.")
-        return job_urls
-        
+            # Prioritas 3: Jika masih kosong, coba dari 'country'
+            if not location_name:
+                country_data = job.get("country") or {}
+                location_name = country_data.get("name")
+                
+            # Fallback jika semua object di atas null
+            location = location_name or "Lokasi tidak diketahui"
+
+            # --- EKSTRAKSI GAJI ---
+            salaries_list = job.get("salaries") or []
+            if salaries_list:
+                salary_info = salaries_list[0]
+                min_salary = salary_info.get("minAmount")
+                max_salary = salary_info.get("maxAmount")
+                currency = salary_info.get("CurrencyCode")
+            else:
+                min_salary = None
+                max_salary = None
+                currency = None
+
+            # --- EKSTRAKSI REQUIREMENTS ---
+            min_exp = job.get("minYearsOfExperience")
+            max_exp = job.get("maxYearsOfExperience")
+            edu_level = job.get("educationLevel") or "Tidak disebutkan"
+            
+            skills_data = job.get("skills") or []
+            skill_names = []
+            for s in skills_data:
+                skill_info = s.get("skill") or {}
+                skill_name = skill_info.get("name")
+                if skill_name:
+                    skill_names.append(skill_name)
+            
+            # --- UPDATE DICTIONARY ---
+            raw_jobs.append({
+                "title": title,
+                "company": company,
+                "location": location,
+                "min_salary": min_salary,
+                "max_salary": max_salary,
+                "currency": currency,
+                "min_exp": min_exp,
+                "max_exp": max_exp,
+                "education": edu_level,
+                "skills": skill_names,
+                "source": "Glints",
+                "raw_url": f"https://glints.com/id/opportunities/jobs/{job.get('id')}",
+                "raw_data": job
+            })
+            
+            skills_str = ", ".join(skill_names) if skill_names else "Tidak ada spesifikasi skill"
+            print(f"- {title} | {company}")
+            print(f"  Lokasi: {location} | Exp: {min_exp}-{max_exp} thn | Edu: {edu_level}")
+            print(f"  Skills: {skills_str[:60]}...\n")
+
     except requests.exceptions.RequestException as e:
-        print(f"Error HTTP: {e}")
-    except ET.ParseError as e:
-        print(f"Error parsing XML: {e}")
-    except Exception as e:
-        print(f"Terjadi error yang tidak terduga: {e}")
+        print(f"Error HTTP saat mengakses API: {e}")
+    except json.JSONDecodeError:
+        print("Gagal membaca struktur JSON dari response.")
         
-    return []
+    return raw_jobs
 
 if __name__ == "__main__":
-    urls = scrape_glints_sitemap()
-    print("\n--- Hasil Ekstraksi URL ---")
-    for u in urls:
-        print(u)
+    scrape_glints_graphql()
