@@ -1,8 +1,8 @@
-import json
 from scrapers.source_a import scrape_glints_graphql
 from scrapers.source_b import scrape_source_b
 from scrapers.source_c import scrape_source_c
 from processor.normalizer import normalize_job_data
+from database.db_manager import save_jobs  # Import fungsi save_jobs
 
 def run_pipeline():
     print("=== Memulai JobRadar Data Pipeline ===")
@@ -33,16 +33,12 @@ def run_pipeline():
         
     print(f"-> Selesai: {len(clean_data)} lowongan berhasil dinormalisasi.")
     
-    # --- TAHAP 3: LOAD (Mockup ke File JSON) ---
-    print("\n[3/3] Memulai penyimpanan ke Mockup Database (Load)...")
+    # --- TAHAP 3: LOAD ---
+    print("\n[3/3] Memulai penyimpanan ke Database PostgreSQL (Load)...")
     
-    output_filename = "jobradar_mock_db.json"
+    # Menyimpan data bersih langsung ke database PostgreSQL
+    save_jobs(clean_data)
     
-    # Menyimpan list of dictionaries ke dalam file JSON
-    with open(output_filename, "w", encoding="utf-8") as f:
-        json.dump(clean_data, f, indent=4, ensure_ascii=False)
-        
-    print(f"-> Selesai: Data berhasil diekspor ke '{output_filename}'")
     print("\n=== Pipeline Selesai dengan Sukses ===")
 
 if __name__ == "__main__":
