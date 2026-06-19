@@ -5,17 +5,14 @@ import (
 
 	"github.com/anggasspm/job-radar/backend/config"
 	"github.com/anggasspm/job-radar/backend/internal/api/rest"
+	"github.com/anggasspm/job-radar/backend/internal/routes"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func setupRoutes(rh *rest.RestHandler) {
-	rh.App.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "OK",
-		})
-	})
+	routes.SetupJobRoutes(rh)
 }
 
 func StartServer(cfg config.AppConfig) {
