@@ -64,6 +64,7 @@ def scrape_source_b():
                 "title": title,
                 "company": company,
                 "location": location,
+                "description": job.get("description"),
                 "min_salary": min_salary,
                 "max_salary": max_salary,
                 "currency": currency,
