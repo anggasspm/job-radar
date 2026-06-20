@@ -1,7 +1,6 @@
 import psycopg2
 
 def get_db_connection():
-    # Kredensial ini disesuaikan dengan isi docker-compose.yml backend
     try:
         conn = psycopg2.connect(
             host="localhost",
@@ -16,62 +15,104 @@ def get_db_connection():
         return None
 
 def save_jobs(clean_jobs_list):
-    """Menyimpan data ke tabel jobs dengan deduplikasi."""
+    """Menyimpan data ke tabel jobs beserta relasi skill-nya."""
     if not clean_jobs_list:
         return
 
-    print(f"\nMemulai proses Load {len(clean_jobs_list)} lowongan ke PostgreSQL...")
+    print(f"\nMemulai proses Load {len(clean_jobs_list)} lowongan ke PostgreSQL (beserta relasi Skills)...")
     conn = get_db_connection()
     if not conn:
         return
 
     cursor = conn.cursor()
-    inserted_count = 0
+    inserted_jobs = 0
+    new_skills_added = 0
 
-    # Mapping nama source ke source_id sesuai migrasi backend (000002_create_sources_table.up.sql)
     source_map = {
         "Glints": 1,
         "Tech in Asia": 2,
         "We Work Remotely": 3
     }
 
-    # Query INSERT dengan klausa ON CONFLICT DO NOTHING untuk mencegah duplikasi (berdasarkan raw_url)
-    insert_query = """
+    # QUERY 1: Insert Job. 
+    # Kita gunakan trik DO UPDATE SET updated_at = now() agar Postgres SELALU mengembalikan ID
+    job_insert_query = """
         INSERT INTO jobs (
             source_id, title, company, location, salary_min, salary_max, 
             currency, min_exp, max_exp, education, raw_url
         ) VALUES (
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-        ) ON CONFLICT (raw_url) DO NOTHING;
+        ) ON CONFLICT (raw_url) DO UPDATE 
+          SET updated_at = now()
+        RETURNING id;
+    """
+
+    # QUERY 2: Insert Skill (Hanya jika belum ada)
+    skill_insert_query = """
+        INSERT INTO skills (name) VALUES (%s) 
+        ON CONFLICT (name) DO NOTHING 
+        RETURNING id;
+    """
+
+    # QUERY 3: Insert Relasi Job & Skill
+    job_skill_insert_query = """
+        INSERT INTO job_skills (job_id, skill_id) VALUES (%s, %s)
+        ON CONFLICT (job_id, skill_id) DO NOTHING;
     """
 
     for job in clean_jobs_list:
-        source_id = source_map.get(job['source'], 1) # Default ke 1 jika tidak ditemukan
+        source_id = source_map.get(job['source'], 1)
         
         try:
-            cursor.execute(insert_query, (
-                source_id,
-                job['title'],
-                job['company'],
-                job['location'],
-                job['min_salary'],
-                job['max_salary'],
-                job['currency'],
-                job['min_exp'],
-                job['max_exp'],
-                job['education'],
-                job['raw_url']
+            # 1. Eksekusi penyimpanan Job dan tangkap ID-nya
+            cursor.execute(job_insert_query, (
+                source_id, job['title'], job['company'], job['location'],
+                job['min_salary'], job['max_salary'], job['currency'],
+                job['min_exp'], job['max_exp'], job['education'], job['raw_url']
             ))
-            # Jika rowcount == 1, berarti data baru berhasil masuk (bukan duplikat)
-            if cursor.rowcount == 1:
-                inserted_count += 1
+            
+            job_record = cursor.fetchone()
+            if not job_record:
+                # Fallback jaga-jaga jika DO UPDATE tidak jalan
+                cursor.execute("SELECT id FROM jobs WHERE raw_url = %s", (job['raw_url'],))
+                job_record = cursor.fetchone()
                 
-        except Exception as e:
-            print(f"Error menyimpan job {job['title']}: {e}")
-            conn.rollback() # Rollback jika ada error pada satu row agar loop bisa lanjut
+            job_id = job_record[0]
+            inserted_jobs += 1
 
-    conn.commit()
+            # 2. Proses Relasi Skills (gunakan set() untuk menghilangkan skill duplikat dalam 1 job)
+            unique_skills = set(job.get('skills', []))
+            
+            for skill_name in unique_skills:
+                clean_skill = skill_name.strip()
+                if not clean_skill:
+                    continue
+                    
+                # Coba masukkan skill baru
+                cursor.execute(skill_insert_query, (clean_skill,))
+                skill_record = cursor.fetchone()
+                
+                if skill_record:
+                    # Skill baru berhasil ditambahkan
+                    skill_id = skill_record[0]
+                    new_skills_added += 1
+                else:
+                    # Skill sudah ada di database, kita cukup SELECT ID-nya
+                    cursor.execute("SELECT id FROM skills WHERE name = %s", (clean_skill,))
+                    skill_id = cursor.fetchone()[0]
+                    
+                # 3. Hubungkan Job ID dengan Skill ID
+                cursor.execute(job_skill_insert_query, (job_id, skill_id))
+            
+            # Commit per lowongan agar jika 1 lowongan error, tidak membatalkan semuanya
+            conn.commit()
+            
+        except Exception as e:
+            print(f"Error menyimpan job '{job['title']}': {e}")
+            conn.rollback() # Batalkan transaksi spesifik ini
+
     cursor.close()
     conn.close()
     
-    print(f"-> Selesai: {inserted_count} lowongan baru berhasil ditambahkan. (Sisanya adalah duplikat yang diabaikan).")
+    print(f"-> Selesai: {inserted_jobs} data pekerjaan telah diproses (Insert/Update).")
+    print(f"-> Info: Terdapat {new_skills_added} entry skill baru ke dalam database kamus skill.")
