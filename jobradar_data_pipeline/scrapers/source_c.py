@@ -51,6 +51,7 @@ def scrape_source_c():
                 "title": job_title.strip(),
                 "company": company_name.strip(),
                 "location": location,
+                "description": item.findtext('description'),
                 "min_salary": 0,    # RSS WWR jarang mencantumkan gaji di metadata
                 "max_salary": 0,
                 "currency": "USD",  # Mayoritas menggunakan USD
