@@ -38,10 +38,10 @@ def save_jobs(clean_jobs_list):
     # Kita gunakan trik DO UPDATE SET updated_at = now() agar Postgres SELALU mengembalikan ID
     job_insert_query = """
         INSERT INTO jobs (
-            source_id, title, company, location, salary_min, salary_max, 
+            source_id, title, company, location, category, salary_min, salary_max, 
             currency, min_exp, max_exp, education, raw_url
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         ) ON CONFLICT (raw_url) DO UPDATE 
           SET updated_at = now()
         RETURNING id;
@@ -66,7 +66,7 @@ def save_jobs(clean_jobs_list):
         try:
             # 1. Eksekusi penyimpanan Job dan tangkap ID-nya
             cursor.execute(job_insert_query, (
-                source_id, job['title'], job['company'], job['location'],
+                source_id, job['title'], job['company'], job['location'], job['category'], # <-- Tambahkan ini
                 job['min_salary'], job['max_salary'], job['currency'],
                 job['min_exp'], job['max_exp'], job['education'], job['raw_url']
             ))
