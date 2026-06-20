@@ -1,3 +1,5 @@
+import re
+
 def normalize_salary(amount):
     if amount is None:
         return 0
@@ -16,12 +18,7 @@ def normalize_location(raw_location):
     return loc.strip()
 
 def categorize_job(title):
-    """
-    Mengelompokkan judul pekerjaan mentah ke kategori baku berbasis kata kunci.
-    """
     title_lower = title.lower()
-    
-    # Aturan pencocokan (dari yang spesifik ke umum)
     if any(kw in title_lower for kw in ["backend", "back end", "back-end", "golang", "java developer", "python developer", "node.js"]):
         return "Backend Developer"
     elif any(kw in title_lower for kw in ["frontend", "front end", "front-end", "react", "vue", "angular"]):
@@ -40,8 +37,18 @@ def categorize_job(title):
         return "Product & Project Management"
     elif any(kw in title_lower for kw in ["security", "pentester", "cyber", "grc"]):
         return "Cyber Security"
-    
-    return "Lainnya" # Kategori fallback jika tidak ada keyword yang cocok
+    return "Lainnya"
+
+def clean_html(raw_html):
+    """Menghapus tag HTML (seperti <p>, <ul>) menjadi teks bersih biasa."""
+    if not raw_html:
+        return "Tidak ada deskripsi pekerjaan."
+    # Menghapus tag HTML
+    clean_text = re.sub(r'<[^>]+>', ' ', raw_html)
+    # Merapikan spasi ganda dan HTML entities umum
+    clean_text = clean_text.replace("&nbsp;", " ").replace("&amp;", "&")
+    clean_text = re.sub(r'\s+', ' ', clean_text)
+    return clean_text.strip()
 
 def normalize_job_data(raw_job):
     raw_title = raw_job.get("title", "").strip()
@@ -50,7 +57,8 @@ def normalize_job_data(raw_job):
         "title": raw_title,
         "company": raw_job.get("company", "").strip(),
         "location": normalize_location(raw_job.get("location")),
-        "category": categorize_job(raw_title), # FUNGSI BARU DIPANGGIL DI SINI
+        "category": categorize_job(raw_title),
+        "description": clean_html(raw_job.get("description", "")), # <-- AMBIL & BERSIHKAN DESKRIPSI
         "min_salary": normalize_salary(raw_job.get("min_salary")),
         "max_salary": normalize_salary(raw_job.get("max_salary")),
         "currency": raw_job.get("currency") or "IDR",
