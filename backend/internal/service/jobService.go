@@ -10,6 +10,12 @@ type JobService struct {
 	// repo
 }
 
+func NewJobService(Repo repository.JobRepository) *JobService {
+	return &JobService{
+		Repo: Repo,
+	}
+}
+
 func (s *JobService) GetJobs() ([]*domain.Job, error) {
 	jobs, err := s.Repo.FindJobs()
 

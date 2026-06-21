@@ -1,17 +1,18 @@
 package handlers
 
 import (
-	"github.com/anggasspm/job-radar/backend/internal/api/rest"
+	"net/http"
+
 	"github.com/anggasspm/job-radar/backend/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 type JobHandler struct {
-	svc service.JobService
+	svc *service.JobService
 	// job service
 }
 
-func NewJobHandler(svc service.JobService) *JobHandler {
+func NewJobHandler(svc *service.JobService) *JobHandler {
 	return &JobHandler{
 		svc: svc,
 	}
@@ -21,9 +22,11 @@ func (h *JobHandler) GetAllJobs(c *gin.Context) {
 	jobs, err := h.svc.GetJobs()
 
 	if err != nil {
-		rest.ErrorMessage(c, 404, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	c.JSON(200, jobs)
+	c.JSON(http.StatusOK, jobs)
 }

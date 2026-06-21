@@ -1,11 +1,13 @@
 package rest
 
 import (
+	"github.com/anggasspm/job-radar/backend/internal/helper"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type RestHandler struct {
-	App *gin.Engine
-	DB  *gorm.DB
+	App  *gin.Engine
+	DB   *gorm.DB
+	Auth helper.Auth
 }

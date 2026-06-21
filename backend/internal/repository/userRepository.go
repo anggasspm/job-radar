@@ -1,9 +1,15 @@
 package repository
 
-import "gorm.io/gorm"
+import (
+	"errors"
+	"log"
+
+	"github.com/anggasspm/job-radar/backend/internal/domain"
+	"gorm.io/gorm"
+)
 
 type UserRepository interface {
-	// all the repo assign here
+	CreateUser(u domain.User) (domain.User, error)
 }
 
 type userRepository struct {
@@ -18,3 +24,13 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 // query using gorm
+func (r *userRepository) CreateUser(u domain.User) (domain.User, error) {
+	err := r.db.Create(&u).Error
+
+	if err != nil {
+		log.Printf("create user error %v", err)
+		return domain.User{}, errors.New("failed to create user")
+	}
+
+	return u, nil
+}

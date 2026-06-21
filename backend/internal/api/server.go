@@ -4,15 +4,15 @@ import (
 	"log"
 
 	"github.com/anggasspm/job-radar/backend/config"
+	"github.com/anggasspm/job-radar/backend/internal/api/module"
 	"github.com/anggasspm/job-radar/backend/internal/api/rest"
-	"github.com/anggasspm/job-radar/backend/internal/routes"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func setupRoutes(rh *rest.RestHandler) {
-	routes.SetupJobRoutes(rh)
+func setupRoutes(rh *rest.RestHandler, cfg *config.AppConfig) {
+	module.SetupUserModule(rh, cfg)
 }
 
 func StartServer(cfg config.AppConfig) {
@@ -30,7 +30,7 @@ func StartServer(cfg config.AppConfig) {
 		DB:  db,
 	}
 
-	setupRoutes(rh)
+	setupRoutes(rh, &cfg)
 
 	log.Println("Server running on :8080")
 	app.Run(":8080")
