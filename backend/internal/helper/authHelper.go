@@ -29,6 +29,16 @@ func (a *Auth) HashPassword(p string) (string, error) {
 	return string(hashP), nil
 }
 
+func (a Auth) VerifyPassword(pP string, hP string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hP), []byte(pP))
+
+	if err != nil {
+		return errors.New("password does not match")
+	}
+
+	return nil
+}
+
 func (a *Auth) GenerateAccessToken(id uint, email string, tier string) (string, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": id,
@@ -60,5 +70,3 @@ func (a *Auth) GenerateRefreshToken(id uint) (string, error) {
 
 	return tokenStr, nil
 }
-
-

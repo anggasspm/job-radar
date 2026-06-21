@@ -20,6 +20,7 @@ func NewUserService(Repo repository.UserRepository, auth helper.Auth) *UserServi
 }
 
 // change to dto
+// can add more context to error from helper rather than just generic error from helper
 func (s *UserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error) {
 	passwordHash, err := s.Auth.HashPassword(req.Password)
 
@@ -55,4 +56,39 @@ func (s *UserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+// login
+func (s *UserService) Login(req dto.UserLogin) (*dto.UserSigninResponse, error) {
+	user, err := s.Repo.FindUserByEmail(req.Email)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.Auth.VerifyPassword(req.Password, user.Password_hash)
+
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := s.Auth.GenerateAccessToken(user.ID, user.Email, user.Tier)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := s.Auth.GenerateRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.UserSigninResponse{
+		User: dto.UserResponse{
+			ID:    user.ID,
+			Email: user.Email,
+		},
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+
 }

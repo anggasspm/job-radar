@@ -21,3 +21,9 @@ type UserSignupResponse struct {
 	AccessToken  string       `json:"access_token"`
 	RefreshToken string       `json:"-"` // used only in internal, wont added to response
 }
+
+type UserSigninResponse struct {
+	User         UserResponse `json:"user"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"-"` // used only in internal, wont added to response
+}

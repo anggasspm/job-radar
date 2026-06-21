@@ -8,4 +8,5 @@ import (
 func SetupUserRoutes(rh *rest.RestHandler, h *handlers.UserHandler) {
 	userRouter := rh.App.Group("/auth")
 	userRouter.POST("/register", h.Register)
+	userRouter.POST("/login", h.Login)
 }

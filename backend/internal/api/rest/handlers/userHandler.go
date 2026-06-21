@@ -49,5 +49,41 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 
 	// response if success
-	c.JSON(http.StatusCreated, resp)
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Register successful",
+		"data":    resp,
+	})
+}
+
+// login
+func (h *UserHandler) Login(c *gin.Context) {
+	var req dto.UserLogin
+
+	// bind json
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON((http.StatusBadRequest), gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp, err := h.svc.Login(req)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrUserNotFound):
+			c.JSON(http.StatusConflict, gin.H{"error": "email not found. Try register"})
+		default:
+			log.Printf("signup error: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	// response if success
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"data":    resp,
+	})
+
 }

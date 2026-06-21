@@ -9,8 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// todo, need to be using same return pattern
 type UserRepository interface {
 	CreateUser(u domain.User) (domain.User, error)
+	FindUserByEmail(email string) (domain.User, error)
 }
 
 type userRepository struct {
@@ -28,6 +30,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 func (r *userRepository) CreateUser(u domain.User) (domain.User, error) {
 	if err := r.db.Create(&u).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			// still 2, but other wrapped inside fmt.error
 			return domain.User{}, fmt.Errorf("create user %s: %w", u.Email, domain.ErrEmailAlreadyExists)
 		}
 		return domain.User{}, fmt.Errorf("create user %s: %w", u.Email, err)
@@ -42,7 +45,7 @@ func (r *userRepository) FindUserByEmail(email string) (domain.User, error) {
 
 	if err != nil {
 		log.Printf("find user error %v", err)
-		return domain.User{}, errors.New("user does not exist")
+		return domain.User{}, domain.ErrUserNotFound
 	}
 	return user, nil
 }
