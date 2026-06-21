@@ -7,6 +7,7 @@ import (
 
 type JobRepository interface {
 	FindJobs() ([]*domain.Job, error)
+	FindJob(id uint) (*domain.Job, error)
 }
 
 type jobRepository struct {
@@ -30,4 +31,16 @@ func (j *jobRepository) FindJobs() ([]*domain.Job, error) {
 	}
 
 	return jobs, nil
-} 
+}
+
+func (j *jobRepository) FindJob(id uint) (*domain.Job, error) {
+	var job *domain.Job
+
+	err := j.db.First(&job, id).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return job, nil
+}
