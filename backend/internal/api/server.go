@@ -18,7 +18,7 @@ func setupRoutes(rh *rest.RestHandler, cfg *config.AppConfig) {
 func StartServer(cfg config.AppConfig) {
 	app := gin.Default()
 
-	db, err := gorm.Open(postgres.Open(cfg.Dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(cfg.Dsn), &gorm.Config{TranslateError: true})
 	if err != nil {
 		log.Fatalf("database connection error: %v", err)
 	}

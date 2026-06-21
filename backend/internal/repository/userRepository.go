@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/anggasspm/job-radar/backend/internal/domain"
@@ -25,13 +26,12 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 // query using gorm
 func (r *userRepository) CreateUser(u domain.User) (domain.User, error) {
-	err := r.db.Create(&u).Error
-
-	if err != nil {
-		log.Printf("create user error %v", err)
-		return domain.User{}, err
+	if err := r.db.Create(&u).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return domain.User{}, fmt.Errorf("create user %s: %w", u.Email, domain.ErrEmailAlreadyExists)
+		}
+		return domain.User{}, fmt.Errorf("create user %s: %w", u.Email, err)
 	}
-
 	return u, nil
 }
 
