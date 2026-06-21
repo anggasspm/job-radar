@@ -31,7 +31,6 @@ func (s *UserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error
 		Email:         req.Email,
 		Password_hash: passwordHash,
 		Name:          req.Name,
-		Tier:          "free",
 	})
 
 	if err != nil {

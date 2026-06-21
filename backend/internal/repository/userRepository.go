@@ -29,8 +29,20 @@ func (r *userRepository) CreateUser(u domain.User) (domain.User, error) {
 
 	if err != nil {
 		log.Printf("create user error %v", err)
-		return domain.User{}, errors.New("failed to create user")
+		return domain.User{}, err
 	}
 
 	return u, nil
+}
+
+func (r *userRepository) FindUserByEmail(email string) (domain.User, error) {
+	var user domain.User
+
+	err := r.db.First(&user, "email=?", email).Error
+
+	if err != nil {
+		log.Printf("find user error %v", err)
+		return domain.User{}, errors.New("user does not exist")
+	}
+	return user, nil
 }
