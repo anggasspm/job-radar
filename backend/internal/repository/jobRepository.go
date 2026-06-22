@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/anggasspm/job-radar/backend/internal/domain"
 	"gorm.io/gorm"
 )
@@ -40,6 +43,9 @@ func (j *jobRepository) FindJob(id uint) (*domain.Job, error) {
 	err := j.db.First(&job, id).Error
 
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("find job: %w", domain.ErrJobNotFound)
+		}
 		return nil, err
 	}
 

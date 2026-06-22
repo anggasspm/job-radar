@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"errors"
+	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/anggasspm/job-radar/backend/internal/domain"
 	"github.com/anggasspm/job-radar/backend/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -39,16 +42,24 @@ func (h *JobHandler) GetJobById(c *gin.Context) {
 
 	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil || id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id tidak valid"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
 	job, err := h.svc.GetJob(uint(id))
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, domain.ErrJobNotFound):
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "job not found",
+			})
+		default:
+			log.Printf("find job error: %w", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+		}
 		return
 	}
 

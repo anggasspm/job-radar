@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/anggasspm/job-radar/backend/internal/domain"
 	"gorm.io/gorm"
@@ -11,8 +10,8 @@ import (
 
 // todo, need to be using same return pattern
 type UserRepository interface {
-	CreateUser(u domain.User) (domain.User, error)
-	FindUserByEmail(email string) (domain.User, error)
+	CreateUser(u *domain.User) (*domain.User, error)
+	FindUserByEmail(email string) (*domain.User, error)
 }
 
 type userRepository struct {
@@ -27,26 +26,28 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 // query using gorm
-func (r *userRepository) CreateUser(u domain.User) (domain.User, error) {
-	if err := r.db.Create(&u).Error; err != nil {
+func (r *userRepository) CreateUser(u *domain.User) (*domain.User, error) {
+	if err := r.db.Create(u).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			// still 2, but other wrapped inside fmt.error
-			return domain.User{}, fmt.Errorf("create user %s: %w", u.Email, domain.ErrEmailAlreadyExists)
+			return &domain.User{}, fmt.Errorf("create user %s: %w", u.Email, domain.ErrEmailAlreadyExists)
 		}
-		return domain.User{}, fmt.Errorf("create user %s: %w", u.Email, err)
+		return nil, fmt.Errorf("create user %s: %w", u.Email, err)
 	}
 	return u, nil
 }
 
 // need to check other errors rather than just label it as not foun
-func (r *userRepository) FindUserByEmail(email string) (domain.User, error) {
+func (r *userRepository) FindUserByEmail(email string) (*domain.User, error) {
 	var user domain.User
 
 	err := r.db.First(&user, "email=?", email).Error
 
 	if err != nil {
-		log.Printf("find user error %v", err)
-		return domain.User{}, fmt.Errorf("find user %s: %w", email, domain.ErrUserNotFound)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("find user %s: %w", email, domain.ErrUserNotFound)
+		}
+		return nil, fmt.Errorf("find user %s: %w", email, err)
 	}
-	return user, nil
+	return &user, nil
 }
