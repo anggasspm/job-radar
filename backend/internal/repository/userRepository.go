@@ -38,6 +38,7 @@ func (r *userRepository) CreateUser(u domain.User) (domain.User, error) {
 	return u, nil
 }
 
+// need to check other errors rather than just label it as not foun
 func (r *userRepository) FindUserByEmail(email string) (domain.User, error) {
 	var user domain.User
 
@@ -45,7 +46,7 @@ func (r *userRepository) FindUserByEmail(email string) (domain.User, error) {
 
 	if err != nil {
 		log.Printf("find user error %v", err)
-		return domain.User{}, domain.ErrUserNotFound
+		return domain.User{}, fmt.Errorf("find user %s: %w", email, domain.ErrUserNotFound)
 	}
 	return user, nil
 }

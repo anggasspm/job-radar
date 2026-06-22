@@ -35,3 +35,18 @@ func (s *JobService) GetJob(id uint) (*domain.Job, error) {
 	return job, nil
 
 }
+
+func (s *JobService) SearchJobs(keyword string) ([]*domain.Job, error) {
+	if keyword == "" {
+		return s.Repo.FindJobs()
+	}
+
+	jobs, err := s.Repo.SearchJobs(keyword)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return jobs, nil
+
+}

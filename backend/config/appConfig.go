@@ -36,6 +36,6 @@ func SetupEnv() (cfg AppConfig, err error) {
 		return AppConfig{}, errors.New("env variables not found")
 	}
 
-	return AppConfig{ServerPort: httpPort, Dsn: Dsn}, nil
+	return AppConfig{ServerPort: httpPort, Dsn: Dsn, AppSecret: AppSecret}, nil
 
 }
