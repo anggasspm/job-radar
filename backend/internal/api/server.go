@@ -6,6 +6,7 @@ import (
 	"github.com/anggasspm/job-radar/backend/config"
 	"github.com/anggasspm/job-radar/backend/internal/api/module"
 	"github.com/anggasspm/job-radar/backend/internal/api/rest"
+	"github.com/anggasspm/job-radar/backend/internal/helper"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -27,8 +28,9 @@ func StartServer(cfg config.AppConfig) {
 	log.Println("Database connected!")
 
 	rh := &rest.RestHandler{
-		App: app,
-		DB:  db,
+		App:  app,
+		DB:   db,
+		Auth: helper.SetupAuth(cfg.AppSecret),
 	}
 
 	setupRoutes(rh, &cfg)
