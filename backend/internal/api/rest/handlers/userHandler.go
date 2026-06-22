@@ -34,7 +34,6 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// change user to token, after signup return jwt token
 	resp, err := h.svc.SignUp(req)
 
 	if err != nil {
