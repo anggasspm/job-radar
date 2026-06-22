@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/anggasspm/job-radar/backend/internal/domain"
 	"github.com/anggasspm/job-radar/backend/internal/dto"
 	"github.com/anggasspm/job-radar/backend/internal/helper"
@@ -28,7 +30,7 @@ func (s *UserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error
 		return nil, err
 	}
 
-	user, err := s.Repo.CreateUser(domain.User{
+	user, err := s.Repo.CreateUser(&domain.User{
 		Email:         req.Email,
 		Password_hash: passwordHash,
 		Name:          req.Name,
@@ -63,23 +65,23 @@ func (s *UserService) Login(req dto.UserLogin) (*dto.UserSigninResponse, error) 
 	user, err := s.Repo.FindUserByEmail(req.Email)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error finding user: %w", err)
 	}
 
 	err = s.Auth.VerifyPassword(req.Password, user.Password_hash)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("eror on verifying password %w", err)
 	}
 
 	accessToken, err := s.Auth.GenerateAccessToken(user.ID, user.Email, user.Tier)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on generating access token %w", err)
 	}
 
 	refreshToken, err := s.Auth.GenerateRefreshToken(user.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on generating refresh token %w", err)
 	}
 
 	return &dto.UserSigninResponse{
