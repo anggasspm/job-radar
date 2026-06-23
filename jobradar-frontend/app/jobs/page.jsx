@@ -19,7 +19,7 @@ export default function JobsPage() {
     setError(null);
     setSearched(true);
     try {
-      const res = await fetch(`${API_BASE}/search/nl?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`${API_BASE}/jobs/search?q=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error("Gagal mengambil data lowongan");
       const data = await res.json();
       setJobs(data.results || []);
