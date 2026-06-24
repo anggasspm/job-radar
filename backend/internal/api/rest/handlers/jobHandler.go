@@ -24,6 +24,13 @@ func NewJobHandler(svc *service.JobService) *JobHandler {
 	}
 }
 
+// GetAllJobs godoc
+// @Summary Get all jobs
+// @Description Get all available jobs
+// @Tags jobs
+// @Produce json
+// @Success 200 {array} dto.JobResponse
+// @Router /jobs [get]
 func (h *JobHandler) GetAllJobs(c *gin.Context) {
 	jobs, err := h.svc.GetJobs()
 
@@ -37,7 +44,13 @@ func (h *JobHandler) GetAllJobs(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.ToJobDto(jobs))
 }
 
-// add error handling not found etc
+// GetJobById godoc
+// @Summary Get job by id
+// @Description Get job detail by id
+// @Tags jobs
+// @Produce json
+// @Success 200 {object} dto.JobResponse
+// @Router /jobs/:id [get]
 func (h *JobHandler) GetJobById(c *gin.Context) {
 	idParam := c.Param("id")
 
@@ -67,6 +80,14 @@ func (h *JobHandler) GetJobById(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.ToJobResponse(job))
 }
 
+// SearchJobs godoc
+// @Summary SearchJobNl
+// @Description Search jobs with matching query/filter
+// @Tags jobs
+// @Produce json
+// @Success 200 {array} dto.JobResponse
+// @Param q query string false "Search keyword"
+// @Router /jobs/search [get]
 func (h *JobHandler) SearchJobs(c *gin.Context) {
 	query := c.Query("q")
 

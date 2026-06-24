@@ -1,0 +1,101 @@
+basePath: /
+definitions:
+  dto.JobResponse:
+    properties:
+      category:
+        type: string
+      company:
+        type: string
+      createdAt:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      education:
+        type: string
+      externalId:
+        type: string
+      id:
+        type: integer
+      isActive:
+        type: boolean
+      location:
+        type: string
+      maxExp:
+        type: integer
+      minExp:
+        type: integer
+      postedDate:
+        type: string
+      rawUrl:
+        type: string
+      salaryMax:
+        type: integer
+      salaryMin:
+        type: integer
+      scrapedAt:
+        type: string
+      sourceId:
+        type: integer
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API for Job Radar
+  title: Job Radar API
+  version: "1.0"
+paths:
+  /jobs:
+    get:
+      description: Get all available jobs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.JobResponse'
+            type: array
+      summary: Get all jobs
+      tags:
+      - jobs
+  /jobs/:id:
+    get:
+      description: Get job detail by id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JobResponse'
+      summary: Get job by id
+      tags:
+      - jobs
+  /jobs/search:
+    get:
+      description: Search jobs with matching query/filter
+      parameters:
+      - description: Search keyword
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.JobResponse'
+            type: array
+      summary: SearchJobNl
+      tags:
+      - jobs
+swagger: "2.0"
