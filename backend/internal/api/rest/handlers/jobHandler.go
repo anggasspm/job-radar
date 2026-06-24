@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/anggasspm/job-radar/backend/internal/domain"
+	"github.com/anggasspm/job-radar/backend/internal/dto"
 	"github.com/anggasspm/job-radar/backend/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,7 @@ func (h *JobHandler) GetAllJobs(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, jobs)
+	c.JSON(http.StatusOK, dto.ToJobDto(jobs))
 }
 
 // add error handling not found etc
@@ -63,7 +64,7 @@ func (h *JobHandler) GetJobById(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, job)
+	c.JSON(http.StatusOK, dto.ToJobResponse(job))
 }
 
 func (h *JobHandler) SearchJobs(c *gin.Context) {
@@ -77,5 +78,5 @@ func (h *JobHandler) SearchJobs(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, jobs)
+	c.JSON(http.StatusOK, dto.ToJobDto(jobs))
 }
