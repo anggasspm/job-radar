@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from scrapers.source_a import scrape_glints_graphql
 from scrapers.source_b import scrape_source_b
 from scrapers.source_c import scrape_source_c
