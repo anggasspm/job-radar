@@ -22,7 +22,7 @@ export default function JobsPage() {
       const res = await fetch(`${API_BASE}/jobs/search?q=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error("Gagal mengambil data lowongan");
       const data = await res.json();
-      setJobs(data.results || []);
+      setJobs(data || []); // backend balikin array langsung, bukan { results: [...] }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -79,9 +79,9 @@ export default function JobsPage() {
             <div className="mt-3 flex items-center gap-3 flex-wrap">
               <Tag icon={<MapPin className="w-3.5 h-3.5" />}>{job.location}</Tag>
               <Tag icon={<Briefcase className="w-3.5 h-3.5" />}>{job.category}</Tag>
-              {job.salary_min && (
+              {job.salaryMin > 0 && (
                 <span className="font-mono text-xs text-teal bg-teal/10 px-2.5 py-1 rounded-full">
-                  Rp {Math.round(job.salary_min / 1_000_000)}–{Math.round(job.salary_max / 1_000_000)} jt
+                  Rp {Math.round(job.salaryMin / 1_000_000)}–{Math.round(job.salaryMax / 1_000_000)} jt
                 </span>
               )}
             </div>

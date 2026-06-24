@@ -34,16 +34,16 @@ export default async function JobDetailPage({ params }) {
           <span className="flex items-center gap-1"><Briefcase className="w-4 h-4" /> {job.category}</span>
         </div>
 
-        {job.salary_min && (
+        {job.salaryMin > 0 && (
           <p className="mt-4 font-mono text-teal text-sm bg-teal/10 inline-block px-3 py-1.5 rounded-full">
-            Rp {job.salary_min.toLocaleString("id-ID")} – Rp {job.salary_max?.toLocaleString("id-ID")}
+            Rp {job.salaryMin.toLocaleString("id-ID")} – Rp {job.salaryMax?.toLocaleString("id-ID")}
           </p>
         )}
 
         <div className="mt-6 text-ink/80 leading-relaxed whitespace-pre-line">{job.description}</div>
 
         <a
-          href={job.raw_url}
+          href={job.rawUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-8 inline-block bg-coral text-white px-6 py-3 rounded-full font-medium hover:bg-coral-dark transition"

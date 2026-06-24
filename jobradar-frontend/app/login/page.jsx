@@ -25,7 +25,7 @@ export default function LoginPage() {
       });
       if (!res.ok) throw new Error("Email atau password salah");
       const data = await res.json();
-      localStorage.setItem("token", data.token); // Ganti ke state biasa kalau dijalankan sebagai artifact
+      localStorage.setItem("token", data.data.access_token); // Ganti ke state biasa kalau dijalankan sebagai artifact
       router.push("/jobs");
     } catch (err) {
       setError(err.message);
