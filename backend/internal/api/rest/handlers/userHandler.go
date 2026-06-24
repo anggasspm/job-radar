@@ -50,7 +50,11 @@ func (h *UserHandler) Register(c *gin.Context) {
 	// response if success
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Register successful",
-		"data":    resp,
+		"data": &dto.UserSignupResponse{
+			User:         resp.User,
+			AccessToken:  resp.AccessToken,
+			RefreshToken: resp.RefreshToken,
+		},
 	})
 }
 
@@ -82,7 +86,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 	// response if success
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
-		"data":    resp,
+		"data": &dto.UserSigninResponse{
+			User:         resp.User,
+			AccessToken:  resp.AccessToken,
+			RefreshToken: resp.RefreshToken,
+		},
 	})
 
 }
