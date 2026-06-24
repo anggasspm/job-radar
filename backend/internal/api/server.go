@@ -10,6 +10,8 @@ import (
 	"github.com/anggasspm/job-radar/backend/internal/helper"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -41,6 +43,9 @@ func StartServer(cfg config.AppConfig) {
 		DB:   db,
 		Auth: helper.SetupAuth(cfg.AppSecret),
 	}
+
+	app.GET("/swagger/*any",
+		ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	setupRoutes(rh, &cfg)
 
