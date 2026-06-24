@@ -23,7 +23,7 @@ func StartServer(cfg config.AppConfig) {
 	app := gin.Default()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://GANTI-DENGAN-DOMAIN-VERCEL-KALIAN.vercel.app", "http://localhost:3000"},
+		AllowOrigins:     []string{"https://jobsradars.vercel.app", "http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
