@@ -21,7 +21,13 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	}
 }
 
-// Function
+// Register godoc
+// @Summary User register
+// @Description User register
+// @Tags users
+// @Produce json
+// @Success 200 {object} dto.UserSignupResponse
+// @Router /auth/register [post]
 func (h *UserHandler) Register(c *gin.Context) {
 	// req is a type of dto user signup
 	var req dto.UserSignup
@@ -58,7 +64,13 @@ func (h *UserHandler) Register(c *gin.Context) {
 	})
 }
 
-// login
+// Login godoc
+// @Summary User login
+// @Description User login
+// @Tags users
+// @Produce json
+// @Success 200 {object} dto.UserSigninResponse
+// @Router /auth/login [post]
 func (h *UserHandler) Login(c *gin.Context) {
 	var req dto.UserLogin
 
