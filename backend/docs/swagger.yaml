@@ -43,6 +43,29 @@ definitions:
       updatedAt:
         type: string
     type: object
+  dto.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  dto.UserSigninResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.UserSignupResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -50,6 +73,32 @@ info:
   title: Job Radar API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      description: User login
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserSigninResponse'
+      summary: User login
+      tags:
+      - users
+  /auth/register:
+    post:
+      description: User register
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserSignupResponse'
+      summary: User register
+      tags:
+      - users
   /jobs:
     get:
       description: Get all available jobs
