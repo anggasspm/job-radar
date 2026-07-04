@@ -19,6 +19,7 @@ import (
 func setupRoutes(rh *rest.RestHandler, cfg *config.AppConfig) {
 	module.SetupUserModule(rh, cfg)
 	module.SetupJobModule(rh)
+	module.SetupFavoriteModule(rh)
 }
 
 func StartServer(cfg config.AppConfig) {
