@@ -1,101 +1,234 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Search, MapPin, Briefcase, ArrowRight } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Search, Loader2 } from "lucide-react";
+import JobCard from "../components/JobCard";
+import JobCardSkeleton from "../components/JobCardSkeleton";
+import StatePanel from "../components/StatePanel";
+import FilterPanel from "../components/FilterPanel";
+import { fetchJobs, searchJobs, ApiError } from "../lib/api";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const EMPTY_FILTERS = { category: "", location: "", minSalary: "0", experience: "" };
 
-export default function JobsPage() {
-  const [query, setQuery] = useState("");
+function JobsPageInner() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+  const [inputValue, setInputValue] = useState(initialQuery);
+  const [query, setQuery] = useState(initialQuery);
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searched, setSearched] = useState(false);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
 
-  async function handleSearch(e) {
-    e.preventDefault();
+  const runSearch = useCallback(async (q) => {
     setLoading(true);
     setError(null);
-    setSearched(true);
     try {
-      const res = await fetch(`${API_BASE}/jobs/search?q=${encodeURIComponent(query)}`);
-      if (!res.ok) throw new Error("Gagal mengambil data lowongan");
-      const data = await res.json();
-      setJobs(data || []); // backend balikin array langsung, bukan { results: [...] }
+      const data = q ? await searchJobs(q) : await fetchJobs();
+      setJobs(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message);
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Terjadi kesalahan yang tidak terduga."
+      );
+      setJobs([]);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = initialQuery
+          ? await searchJobs(initialQuery)
+          : await fetchJobs();
+        if (!cancelled) {
+          setJobs(Array.isArray(data) ? data : []);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : "Terjadi kesalahan yang tidak terduga."
+          );
+          setJobs([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    setQuery(inputValue);
+    runSearch(inputValue);
   }
 
-  return (
-    <main className="max-w-3xl mx-auto px-6 py-12">
-      <h1 className="font-display font-bold text-3xl mb-6">Cari lowongan</h1>
+  const categories = useMemo(
+    () => [...new Set(jobs.map((j) => j.category).filter(Boolean))].sort(),
+    [jobs]
+  );
+  const locations = useMemo(
+    () => [...new Set(jobs.map((j) => j.location).filter(Boolean))].sort(),
+    [jobs]
+  );
 
-      <form onSubmit={handleSearch} className="flex gap-2 mb-10">
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      if (filters.category && job.category !== filters.category) return false;
+      if (filters.location && job.location !== filters.location) return false;
+      if (Number(filters.minSalary) > 0) {
+        const jobMax = job.salaryMax || job.salaryMin || 0;
+        if (jobMax < Number(filters.minSalary)) return false;
+      }
+      if (filters.experience) {
+        const [lo, hi] = filters.experience.split("-").map(Number);
+        const jobMin = job.minExp ?? 0;
+        if (jobMin < lo || jobMin > hi) return false;
+      }
+      return true;
+    });
+  }, [jobs, filters]);
+
+  const activeFilterCount = Object.entries(filters).filter(
+    ([k, v]) => v && v !== EMPTY_FILTERS[k]
+  ).length;
+
+  return (
+    <main className="max-w-6xl mx-auto px-6 py-10">
+      <div className="mb-6">
+        <h1 className="font-display font-bold text-2xl md:text-3xl text-ink">
+          Cari lowongan
+        </h1>
+        <p className="text-sm text-ink-soft mt-1">
+          Ketik peran, kota, atau kata kunci apa pun — kami cocokkan ke judul,
+          perusahaan, lokasi, dan kategori sekaligus.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/40" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-soft/60" />
           <input
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="kerja remote backend gaji minimal 8 juta di Jakarta"
-            className="w-full pl-11 pr-4 py-3.5 rounded-full border border-line bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-coral/40 focus:border-coral"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="mis. backend Jakarta gaji 8 juta"
+            className="w-full pl-11 pr-4 py-3.5 rounded-full border border-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="bg-ink text-white px-6 py-3.5 rounded-full font-medium hover:bg-ink/90 transition disabled:opacity-50 shrink-0"
+          className="bg-ink text-white px-6 py-3.5 rounded-full font-medium text-sm hover:bg-ink/90 transition disabled:opacity-50 shrink-0 flex items-center gap-2"
         >
-          {loading ? "Mencari…" : "Cari"}
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          Cari
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowFilters((s) => !s)}
+          className="md:hidden border border-line px-4 py-3.5 rounded-full text-sm font-medium text-ink-soft shrink-0"
+        >
+          Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
         </button>
       </form>
 
-      {error && <p className="text-red-600 mb-6">{error}</p>}
-
-      <div className="space-y-3">
-        {!searched && (
-          <p className="text-ink/40 text-center py-16">Ketik kriteria pekerjaanmu di atas untuk mulai.</p>
-        )}
-        {searched && !loading && jobs.length === 0 && !error && (
-          <p className="text-ink/40 text-center py-16">Tidak ada lowongan yang cocok. Coba kriteria lain.</p>
-        )}
-        {jobs.map((job) => (
-          <Link
-            key={job.id}
-            href={`/jobs/${job.id}`}
-            className="group block bg-white border border-line rounded-2xl p-5 hover:border-coral/50 hover:shadow-md transition"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-display font-semibold">{job.title}</h3>
-                <p className="text-sm text-ink/60 mt-0.5">{job.company}</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-ink/30 group-hover:text-coral group-hover:translate-x-0.5 transition shrink-0 mt-1" />
-            </div>
-            <div className="mt-3 flex items-center gap-3 flex-wrap">
-              <Tag icon={<MapPin className="w-3.5 h-3.5" />}>{job.location}</Tag>
-              <Tag icon={<Briefcase className="w-3.5 h-3.5" />}>{job.category}</Tag>
-              {job.salaryMin > 0 && (
-                <span className="font-mono text-xs text-teal bg-teal/10 px-2.5 py-1 rounded-full">
-                  Rp {Math.round(job.salaryMin / 1_000_000)}–{Math.round(job.salaryMax / 1_000_000)} jt
-                </span>
+      {!loading && !error && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between text-xs font-mono text-ink-soft mb-2">
+            <span>
+              {filteredJobs.length} sinyal ditemukan
+              {query && <> untuk “{query}”</>}
+              {jobs.length !== filteredJobs.length && (
+                <> · {jobs.length} total sebelum filter</>
               )}
-            </div>
-          </Link>
-        ))}
+            </span>
+          </div>
+          <div className="scan-line" />
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-[240px_1fr] gap-6">
+        <aside className={`${showFilters ? "block" : "hidden"} md:block`}>
+          <div className="md:sticky md:top-24">
+            <FilterPanel
+              categories={categories}
+              locations={locations}
+              filters={filters}
+              onChange={setFilters}
+              onReset={() => setFilters(EMPTY_FILTERS)}
+              activeCount={activeFilterCount}
+            />
+          </div>
+        </aside>
+
+        <div className="space-y-3 min-w-0">
+          {loading &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <JobCardSkeleton key={i} />
+            ))}
+
+          {!loading && error && (
+            <StatePanel
+              variant="error"
+              title="Gagal mengambil data lowongan"
+              description={error}
+              action={
+                <button
+                  onClick={() => runSearch(query)}
+                  className="text-sm font-medium bg-ink text-white px-5 py-2.5 rounded-full hover:bg-ink/90 transition"
+                >
+                  Coba lagi
+                </button>
+              }
+            />
+          )}
+
+          {!loading && !error && filteredJobs.length === 0 && (
+            <StatePanel
+              variant="empty"
+              title="Tidak ada lowongan yang cocok"
+              description="Coba longgarkan filter atau ganti kata kunci pencarian."
+              action={
+                activeFilterCount > 0 ? (
+                  <button
+                    onClick={() => setFilters(EMPTY_FILTERS)}
+                    className="text-sm font-medium text-coral-dark hover:underline"
+                  >
+                    Hapus semua filter
+                  </button>
+                ) : null
+              }
+            />
+          )}
+
+          {!loading &&
+            !error &&
+            filteredJobs.map((job) => <JobCard key={job.id} job={job} />)}
+        </div>
       </div>
     </main>
   );
 }
 
-function Tag({ icon, children }) {
+export default function JobsPage() {
   return (
-    <span className="flex items-center gap-1 text-xs text-ink/60">
-      {icon} {children}
-    </span>
+    <Suspense fallback={null}>
+      <JobsPageInner />
+    </Suspense>
   );
 }

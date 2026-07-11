@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { ArrowRight, Radar } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Search } from "lucide-react";
 
 const EXAMPLE_QUERIES = [
   "kerja remote backend gaji minimal 8 juta",
@@ -11,86 +11,101 @@ const EXAMPLE_QUERIES = [
   "magang UI/UX dekat Surabaya",
 ];
 
-const STATS = [
-  { value: "12.400+", label: "lowongan dipantau" },
-  { value: "3", label: "sumber terintegrasi" },
-  { value: "6 jam", label: "siklus update" },
-];
+const SOURCES = ["Glints", "Tech in Asia", "We Work Remotely"];
 
 export default function LandingPage() {
-  const [i, setI] = useState(0);
+  const router = useRouter();
+  const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    const interval = setInterval(() => setI((x) => (x + 1) % EXAMPLE_QUERIES.length), 2800);
-    return () => clearInterval(interval);
-  }, []);
+  function handleSubmit(e) {
+    e.preventDefault();
+    const params = query.trim()
+      ? `?q=${encodeURIComponent(query.trim())}`
+      : "";
+    router.push(`/jobs${params}`);
+  }
 
   return (
     <main>
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-coral-dark bg-coral/10 px-3 py-1 rounded-full mb-6">
-          <Radar className="w-3.5 h-3.5" /> Pencarian kerja bertenaga AI
+        <span className="inline-flex items-center gap-1.5 text-xs font-mono text-coral-dark bg-coral/10 px-3 py-1 rounded-full mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-coral signal-dot" />
+          memindai {SOURCES.length} sumber lowongan
         </span>
 
-        <h1 className="font-display font-bold text-4xl md:text-6xl tracking-tight leading-[1.05]">
+        <h1 className="font-display font-bold text-4xl md:text-6xl tracking-tight leading-[1.05] text-ink">
           Berhenti scroll 10 platform.
           <br />
           Cukup bilang apa yang kamu cari.
         </h1>
 
-        <p className="mt-5 text-lg text-ink/60 max-w-xl mx-auto">
-          JobRadar memindai ribuan lowongan setiap hari, lalu memahami kalimat
-          biasa — bukan cuma kata kunci.
+        <p className="mt-5 text-lg text-ink-soft max-w-xl mx-auto">
+          JobRadar memindai lowongan dari {SOURCES.join(", ")}, lalu
+          memahami kalimat biasa — bukan cuma kata kunci.
         </p>
 
-        <div className="mt-10 relative max-w-xl mx-auto">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 w-3 h-3">
-            <span className="radar-ring" />
-            <span className="radar-ring" />
-            <span className="radar-ring" />
-            <span className="absolute inset-0 rounded-full bg-coral" />
-          </div>
-          <div className="flex items-center bg-white border border-line rounded-full pl-12 pr-2 py-2 shadow-sm">
-            <span className="flex-1 text-left text-ink/50 truncate font-mono text-sm">
-              {EXAMPLE_QUERIES[i]}
-            </span>
-            <Link
-              href="/jobs"
+        <form
+          onSubmit={handleSubmit}
+          className="mt-10 relative max-w-xl mx-auto"
+        >
+          <div className="flex items-center bg-white border border-line rounded-full pl-5 pr-2 py-2 shadow-sm focus-within:border-coral focus-within:ring-2 focus-within:ring-coral/20 transition">
+            <Search className="w-4 h-4 text-ink-soft/50 shrink-0 mr-2" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={EXAMPLE_QUERIES[0]}
+              className="flex-1 min-w-0 text-left text-sm bg-transparent focus:outline-none placeholder:text-ink-soft/50"
+            />
+            <button
+              type="submit"
               className="flex items-center gap-1.5 bg-ink text-white text-sm font-medium px-5 py-2.5 rounded-full hover:bg-ink/90 transition shrink-0"
             >
               Cari <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
           </div>
-        </div>
-
-        <div className="mt-14 flex justify-center gap-10 flex-wrap">
-          {STATS.map((s) => (
-            <div key={s.label}>
-              <p className="font-display font-bold text-2xl">{s.value}</p>
-              <p className="text-sm text-ink/50">{s.label}</p>
-            </div>
-          ))}
-        </div>
+          <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-ink-soft/70 font-mono">
+            {EXAMPLE_QUERIES.slice(1).map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setQuery(q)}
+                className="hover:text-coral-dark transition"
+              >
+                “{q}”
+              </button>
+            ))}
+          </div>
+        </form>
       </section>
 
       <section className="max-w-4xl mx-auto px-6 py-16 border-t border-line">
-        <h2 className="font-display font-bold text-2xl mb-10 text-center">Cara kerjanya</h2>
+        <h2 className="font-display font-bold text-2xl mb-10 text-center text-ink">
+          Cara kerjanya
+        </h2>
         <div className="grid md:grid-cols-3 gap-8">
-          <Step n="01" title="Ceritakan kriterianya" description="Ketik dengan bahasamu sendiri — role, kota, gaji, tipe kerja." />
-          <Step n="02" title="AI menyaring ribuan lowongan" description="Sistem memahami maksudmu dan mencocokkan ke data yang selalu segar." />
-          <Step n="03" title="Lamar atau pasang alert" description="Klik langsung ke sumber asli, atau biarkan kami memberi tahu duluan." />
+          <Step
+            title="Ceritakan kriterianya"
+            description="Ketik dengan bahasamu sendiri — peran, kota, gaji, tipe kerja."
+          />
+          <Step
+            title="Kami menyaring lowongan aktif"
+            description="Setiap lowongan dicocokkan ke judul, lokasi, kategori, dan perusahaan sekaligus."
+          />
+          <Step
+            title="Lamar langsung ke sumber asli"
+            description="Setiap hasil terhubung langsung ke halaman lamaran resminya."
+          />
         </div>
       </section>
     </main>
   );
 }
 
-function Step({ n, title, description }) {
+function Step({ title, description }) {
   return (
-    <div>
-      <p className="font-mono text-sm text-coral-dark mb-3">{n}</p>
-      <h3 className="font-display font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-ink/60">{description}</p>
+    <div className="border-l-2 border-line pl-4">
+      <h3 className="font-display font-semibold text-ink">{title}</h3>
+      <p className="mt-2 text-sm text-ink-soft">{description}</p>
     </div>
   );
 }

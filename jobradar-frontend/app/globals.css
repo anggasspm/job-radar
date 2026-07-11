@@ -5,12 +5,17 @@ html {
 }
 
 @theme {
-  --color-ink: #14213D;
-  --color-canvas: #F7F8FA;
-  --color-coral: #FF6B4A;
-  --color-coral-dark: #E5532F;
-  --color-teal: #2EC4B6;
-  --color-line: #E2E5EA;
+  --color-ink: #14213d;
+  --color-ink-soft: #4a5578;
+  --color-canvas: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-coral: #ff6b4a;
+  --color-coral-dark: #e5532f;
+  --color-teal: #2ec4b6;
+  --color-teal-dark: #1f9a8f;
+  --color-line: #e2e5ea;
+  --color-line-strong: #c9ced9;
+  --color-amber: #e0a13a;
 }
 
 @theme inline {
@@ -19,22 +24,59 @@ html {
   --font-mono: var(--font-mono);
 }
 
-@keyframes radar-pulse {
-  0% { transform: scale(0.7); opacity: 0.5; }
-  80% { opacity: 0.08; }
-  100% { transform: scale(2.4); opacity: 0; }
+* {
+  -webkit-font-smoothing: antialiased;
 }
 
-.radar-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1.5px solid #FF6B4A;
-  animation: radar-pulse 2.8s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+body {
+  background-color: var(--color-canvas);
 }
-.radar-ring:nth-child(2) { animation-delay: 0.9s; }
-.radar-ring:nth-child(3) { animation-delay: 1.8s; }
+
+/* Fokus keyboard terlihat jelas di semua elemen interaktif. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-coral);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Indikator sinyal kecil di kartu lowongan — titik berdenyut halus,
+   bukan animasi radar besar. Dihormati prefers-reduced-motion. */
+@keyframes signal-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.signal-dot {
+  animation: signal-blink 2.4s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .radar-ring { animation: none; opacity: 0; }
+  .signal-dot {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Garis pemindaian halus untuk status strip — dekoratif tapi tenang. */
+.scan-line {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-line-strong) 0,
+    var(--color-line-strong) 4px,
+    transparent 4px,
+    transparent 9px
+  );
+  height: 1px;
 }

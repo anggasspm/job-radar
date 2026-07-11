@@ -14,14 +14,21 @@ const mono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
-export const metadata = { title: "JobRadar" };
+export const metadata = {
+  title: "JobRadar — Pencarian kerja yang paham bahasamu",
+  description:
+    "JobRadar memindai ribuan lowongan dari Glints, Tech in Asia, dan We Work Remotely, lalu membantumu menemukan yang cocok lewat kalimat biasa.",
+};
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body className="font-body bg-canvas text-ink antialiased">
+    <html
+      lang="id"
+      className={`${display.variable} ${body.variable} ${mono.variable}`}
+    >
+      <body className="font-body bg-canvas text-ink antialiased min-h-screen flex flex-col">
         <Header />
-        {children}
+        <div className="flex-1">{children}</div>
       </body>
     </html>
   );
