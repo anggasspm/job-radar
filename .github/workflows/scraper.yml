@@ -1,39 +1,38 @@
 name: JobRadar Daily Scraper
 
-# Menentukan kapan script dijalankan
 on:
   schedule:
-    # Berjalan setiap jam 19:00 UTC, yang sama dengan jam 02:00 pagi WIB (Waktu Indonesia Barat)
     - cron: "0 19 * * *"
-  # Memungkinkan kita menekan tombol "Run" secara manual di menu GitHub Actions
   workflow_dispatch:
 
 jobs:
   run-data-pipeline:
     runs-on: ubuntu-latest
 
+    # 1. Mengatur folder kerja default untuk seluruh job ini
+    defaults:
+      run:
+        working-directory: ./jobradar_data_pipeline
+
     steps:
-      # 1. Mengambil kode terbaru dari repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Menyiapkan Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11" # Sesuaikan dengan versimu
+          python-version: "3.11"
 
-      # 3. Menginstal dependensi (Pastikan requirements.txt sudah di-push ke GitHub)
+      # 2. Debugging: Cetak daftar file untuk memastikan folder dan isinya ada
+      - name: Debugging - Cek Isi Folder Pipeline
+        run: ls -la
+
+      # 3. Instalasi tanpa perlu 'cd' lagi karena working-directory sudah di-set
       - name: Install Dependencies
-        run: |
-          cd jobradar_data_pipeline
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      # 4. Menjalankan Pipeline Utama
+      # 4. Eksekusi Scraper
       - name: Run Scraper Pipeline
         env:
-          # Masukkan variabel rahasia ini di menu Settings > Secrets and variables > Actions di GitHub
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          cd jobradar_data_pipeline
-          python main.py
+        run: python main.py
