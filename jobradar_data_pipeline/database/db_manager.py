@@ -1,14 +1,38 @@
 import os
 import psycopg2
 
-
 def get_db_connection():
     try:
-        conn = psycopg2.connect(os.environ["DATABASE_URL"])
-        return conn
-    except KeyError:
-        print("Gagal terhubung ke database: environment variable DATABASE_URL belum di-set.")
+        # Pendekatan 1: Coba baca format URL tunggal (Sering dipakai platform Cloud/Go)
+        # Contoh: postgresql://user:pass@host:port/dbname
+        db_url = os.getenv("DATABASE_URL")
+        if db_url:
+            conn = psycopg2.connect(db_url)
+            return conn
+        
+        # Pendekatan 2: Coba baca 5 variabel terpisah (Sesuai dengan GitHub Secrets sebelumnya)
+        db_host = os.getenv("DB_HOST")
+        db_port = os.getenv("DB_PORT")
+        db_name = os.getenv("DB_NAME")
+        db_user = os.getenv("DB_USER")
+        db_pass = os.getenv("DB_PASSWORD")
+
+        # Pastikan kelima variabel ini memiliki nilai (tidak None)
+        if all([db_host, db_port, db_name, db_user, db_pass]):
+            conn = psycopg2.connect(
+                host=db_host,
+                port=db_port,
+                dbname=db_name,
+                user=db_user,
+                password=db_pass
+            )
+            return conn
+        
+        # Jika kedua pendekatan di atas gagal
+        print("Gagal: Environment variable database belum diatur dengan benar.")
+        print("Pastikan DATABASE_URL atau (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD) sudah terisi.")
         return None
+
     except Exception as e:
         print(f"Gagal terhubung ke database: {e}")
         return None
@@ -34,8 +58,7 @@ def save_jobs(clean_jobs_list):
         "We Work Remotely": 3
     }
 
-    # QUERY 1: Insert Job.
-    # Kita gunakan trik DO UPDATE SET updated_at = now() agar Postgres SELALU mengembalikan ID
+    # QUERY 1: Insert Job
     job_insert_query = """
         INSERT INTO jobs (
             source_id, title, company, location, category, description, salary_min, salary_max, 
@@ -48,7 +71,7 @@ def save_jobs(clean_jobs_list):
         RETURNING id;
     """
 
-    # QUERY 2: Insert Skill (Hanya jika belum ada)
+    # QUERY 2: Insert Skill
     skill_insert_query = """
         INSERT INTO skills (name) VALUES (%s) 
         ON CONFLICT (name) DO NOTHING 
@@ -82,7 +105,7 @@ def save_jobs(clean_jobs_list):
             job_id = job_record[0]
             inserted_jobs += 1
 
-            # 2. Proses Relasi Skills (gunakan set() untuk menghilangkan skill duplikat dalam 1 job)
+            # 2. Proses Relasi Skills
             unique_skills = set(job.get('skills', []))
 
             for skill_name in unique_skills:
