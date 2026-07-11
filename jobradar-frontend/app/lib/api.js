@@ -67,7 +67,7 @@ async function request(path, options = {}) {
 // ---- Jobs ----
 // Backend selalu balikin array polos untuk /jobs dan /jobs/search.
 export function fetchJobs() {
-  return request("/jobs");
+  return request("/jobs/");
 }
 
 export function searchJobs(query) {
@@ -95,10 +95,7 @@ export function register(name, email, password) {
   });
 }
 
-// ---- Favorites ----
-// Catatan jujur: backend saat ini hanya punya endpoint GET untuk favorit.
-// Menambah/menghapus favorit belum tersedia di sisi server, jadi UI
-// menampilkan itu secara terbuka alih-alih berpura-pura berfungsi.
+
 export function fetchFavorites() {
   return request("/favorite/");
 }

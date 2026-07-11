@@ -3,14 +3,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { getUser, getTokenExpiry, clearSession, isAuthenticated } from "./auth";
 
-// Snapshot dipakai semasa render server / sebelum hydration: sengaja
-// ready:false supaya komponen tahu localStorage belum sempat dibaca.
 const SERVER_SNAPSHOT = { user: null, expiresAt: null, ready: false };
 
-// Cache snapshot terakhir supaya getSnapshot mengembalikan referensi objek
-// YANG SAMA selama isinya belum berubah. Tanpa ini, useSyncExternalStore
-// akan melihat objek baru setiap render → dianggap "berubah terus" →
-// infinite loop ("Maximum update depth exceeded").
 let cachedSnapshot = null;
 
 function readSession() {
