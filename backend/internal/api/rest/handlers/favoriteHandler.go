@@ -36,7 +36,7 @@ func (h *FavoriteHandler) GetFavoritesByUser(c *gin.Context) {
 
 func (h *FavoriteHandler) AddToFavorites(c *gin.Context) {
 	userId := c.GetUint("userID")
-	
+
 	idParam := c.Param("id")
 
 	jobId, err := strconv.ParseInt(idParam, 10, 64)
@@ -44,7 +44,6 @@ func (h *FavoriteHandler) AddToFavorites(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
-
 
 	fav := &dto.FavoriteRequest{
 		UserID: userId,
@@ -65,5 +64,31 @@ func (h *FavoriteHandler) AddToFavorites(c *gin.Context) {
 }
 
 func (h *FavoriteHandler) DeleteFromFavorites(c *gin.Context) {
+	userId := c.GetUint("userID")
 
+	idParam := c.Param("id")
+
+	jobId, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil || jobId <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	fav := &dto.FavoriteRequest{
+		UserID: userId,
+		JobID:  jobId,
+	}
+
+	err = h.svc.DeleteFromFavs(fav)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Deleted successfully",
+	})
 }

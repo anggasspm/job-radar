@@ -11,6 +11,7 @@ import (
 type FavoriteRepository interface {
 	FindFavsByUser(userId uint) ([]*dto.FavoriteDetail, error)
 	AddToFavs(f *domain.FavoriteJob) (*domain.FavoriteJob, error)
+	DeleteFromFavs(f *domain.FavoriteJob) error
 }
 
 type favoriteRepository struct {
@@ -52,4 +53,15 @@ func (r *favoriteRepository) AddToFavs(f *domain.FavoriteJob) (*domain.FavoriteJ
 	}
 
 	return f, nil
+}
+
+func (r *favoriteRepository) DeleteFromFavs(f *domain.FavoriteJob) error {
+
+	err := r.db.Table("favorites f").Where("user_id = ? AND job_id = ?", f.UserID, f.JobID).Delete(&domain.FavoriteJob{})
+
+	if err != nil {
+		return nil
+	}
+
+	return nil
 }

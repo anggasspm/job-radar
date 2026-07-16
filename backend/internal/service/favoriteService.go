@@ -44,3 +44,16 @@ func (s *FavoriteService) AddToFavs(req *dto.FavoriteRequest) (*dto.FavoriteResp
 		CreatedAt: fav.CreatedAt,
 	}, nil
 }
+
+func (s *FavoriteService) DeleteFromFavs(req *dto.FavoriteRequest) error {
+	err := s.Repo.DeleteFromFavs(&domain.FavoriteJob{
+		JobID:  req.JobID,
+		UserID: req.UserID,
+	})
+
+	if err != nil {
+		return nil
+	}
+
+	return err
+}
