@@ -9,7 +9,7 @@ import (
 )
 
 type FavoriteRepository interface {
-	FindFavsByUser(userId uint) ([]*dto.FavoriteResponse, error)
+	FindFavsByUser(userId uint) ([]*dto.FavoriteDetail, error)
 	AddToFavs(f *domain.FavoriteJob) (*domain.FavoriteJob, error)
 }
 
@@ -23,8 +23,8 @@ func NewFavoriteRepository(db *gorm.DB) FavoriteRepository {
 	}
 }
 
-func (r *favoriteRepository) FindFavsByUser(userId uint) ([]*dto.FavoriteResponse, error) {
-	var favorites []*dto.FavoriteResponse
+func (r *favoriteRepository) FindFavsByUser(userId uint) ([]*dto.FavoriteDetail, error) {
+	var favorites []*dto.FavoriteDetail
 
 	err := r.db.Table("favorites f").
 		Select(`

@@ -16,7 +16,7 @@ func NewFavService(Repo repository.FavoriteRepository) *FavoriteService {
 	}
 }
 
-func (s *FavoriteService) GetFavsByUser(userId uint) ([]*dto.FavoriteResponse, error) {
+func (s *FavoriteService) GetFavsByUser(userId uint) ([]*dto.FavoriteDetail, error) {
 	favs, err := s.Repo.FindFavsByUser(userId)
 
 	if err != nil {

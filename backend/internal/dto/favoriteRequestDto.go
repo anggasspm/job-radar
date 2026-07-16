@@ -17,3 +17,15 @@ type FavoriteRequest struct {
 	UserID    uint  `json:"user_id"`
 	CreatedAt time.Time
 }
+
+type FavoriteDetail struct {
+	FavoriteID uint
+	CreatedAt  time.Time
+
+	JobID     int64
+	Title     string
+	Company   string
+	Location  string
+	SalaryMin int64
+	SalaryMax int64
+}
