@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/anggasspm/job-radar/backend/internal/domain"
+	"github.com/anggasspm/job-radar/backend/internal/dto"
 	"github.com/anggasspm/job-radar/backend/internal/repository"
 )
 
@@ -15,7 +16,7 @@ func NewFavService(Repo repository.FavoriteRepository) *FavoriteService {
 	}
 }
 
-func (s *FavoriteService) GetFavsByUser(userId uint) ([]*domain.FavoriteJob, error) {
+func (s *FavoriteService) GetFavsByUser(userId uint) ([]*dto.FavoriteResponse, error) {
 	favs, err := s.Repo.FindFavsByUser(userId)
 
 	if err != nil {
@@ -24,4 +25,22 @@ func (s *FavoriteService) GetFavsByUser(userId uint) ([]*domain.FavoriteJob, err
 
 	return favs, nil
 
+}
+
+func (s *FavoriteService) AddToFavs(req *dto.FavoriteRequest) (*dto.FavoriteResponse, error) {
+	fav, err := s.Repo.AddToFavs(&domain.FavoriteJob{
+		JobID:  req.JobID,
+		UserID: req.UserID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.FavoriteResponse{
+		ID:        fav.ID,
+		UserID:    fav.UserID,
+		JobID:     fav.JobID,
+		CreatedAt: fav.CreatedAt,
+	}, nil
 }

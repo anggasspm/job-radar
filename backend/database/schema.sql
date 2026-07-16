@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jmiMZCCzVMc4sWlxHcVj4kGn99dYW5eh7A12qOvI2ZfLKFoPTneGj7OGuPA9MqR
+\restrict iwWMQoJ03fS3hPaKdMLHmgONoRImaKcrysCtRkE9r5kZZ1CHL8EENNQgDfWvKHK
 
 -- Dumped from database version 17.10 (Debian 17.10-1.pgdg13+1)
 -- Dumped by pg_dump version 17.10 (Debian 17.10-1.pgdg13+1)
@@ -150,6 +150,37 @@ CREATE TABLE public.api_usage_daily (
     usage_date date NOT NULL,
     request_count integer DEFAULT 0 NOT NULL
 );
+
+
+--
+-- Name: favorites; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.favorites (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    job_id bigint NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: favorites_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.favorites_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: favorites_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.favorites_id_seq OWNED BY public.favorites.id;
 
 
 --
@@ -440,6 +471,13 @@ ALTER TABLE ONLY public.api_keys ALTER COLUMN id SET DEFAULT nextval('public.api
 
 
 --
+-- Name: favorites id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites ALTER COLUMN id SET DEFAULT nextval('public.favorites_id_seq'::regclass);
+
+
+--
 -- Name: jobs id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -534,6 +572,14 @@ ALTER TABLE ONLY public.api_keys
 
 ALTER TABLE ONLY public.api_usage_daily
     ADD CONSTRAINT api_usage_daily_pkey PRIMARY KEY (api_key_id, usage_date);
+
+
+--
+-- Name: favorites favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT favorites_pkey PRIMARY KEY (id);
 
 
 --
@@ -641,6 +687,14 @@ ALTER TABLE ONLY public.sources
 
 
 --
+-- Name: favorites uq_favorite; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT uq_favorite UNIQUE (user_id, job_id);
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -713,7 +767,7 @@ CREATE INDEX idx_jobs_title_trgm ON public.jobs USING gin (title public.gin_trgm
 
 
 --
--- Name: idx_oauth_accounts_user; Type: INDEX; Schema: public; Owner: -ß
+-- Name: idx_oauth_accounts_user; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_oauth_accounts_user ON public.oauth_accounts USING btree (user_id);
@@ -767,6 +821,22 @@ ALTER TABLE ONLY public.api_usage_daily
 
 
 --
+-- Name: favorites fk_favorites_job; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT fk_favorites_job FOREIGN KEY (job_id) REFERENCES public.jobs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: favorites fk_favorites_user; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT fk_favorites_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: refresh_tokens fk_refresh_tokens_user; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -810,5 +880,5 @@ ALTER TABLE ONLY public.oauth_accounts
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jmiMZCCzVMc4sWlxHcVj4kGn99dYW5eh7A12qOvI2ZfLKFoPTneGj7OGuPA9MqR
+\unrestrict iwWMQoJ03fS3hPaKdMLHmgONoRImaKcrysCtRkE9r5kZZ1CHL8EENNQgDfWvKHK
 

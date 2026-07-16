@@ -14,5 +14,6 @@ func SetupFavoriteRoutes(rh *rest.RestHandler, h *handlers.FavoriteHandler) {
 
 	{
 		protected.GET("/", h.GetFavoritesByUser)
+		protected.POST("/:id", h.AddToFavorites)
 	}
 }

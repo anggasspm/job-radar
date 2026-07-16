@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/anggasspm/job-radar/backend/internal/dto"
 	"github.com/anggasspm/job-radar/backend/internal/service"
@@ -30,10 +31,36 @@ func (h *FavoriteHandler) GetFavoritesByUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.ToFavDto(favoritesByUser))
+	c.JSON(http.StatusOK, favoritesByUser)
 }
 
 func (h *FavoriteHandler) AddToFavorites(c *gin.Context) {
+	userId := c.GetUint("userID")
+	
+	idParam := c.Param("id")
+
+	jobId, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil || jobId <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+
+	fav := &dto.FavoriteRequest{
+		UserID: userId,
+		JobID:  jobId,
+	}
+
+	favorite, err := h.svc.AddToFavs(fav)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, favorite)
 
 }
 
