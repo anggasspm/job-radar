@@ -25,10 +25,10 @@ func NewJobRepository(db *gorm.DB) JobRepository {
 	}
 }
 
-func (j *jobRepository) FindJobs() ([]*domain.Job, error) {
+func (r *jobRepository) FindJobs() ([]*domain.Job, error) {
 	var jobs []*domain.Job
 
-	err := j.db.Find(&jobs).Error
+	err := r.db.Find(&jobs).Error
 
 	if err != nil {
 		return nil, err
@@ -37,10 +37,10 @@ func (j *jobRepository) FindJobs() ([]*domain.Job, error) {
 	return jobs, nil
 }
 
-func (j *jobRepository) FindJob(id uint) (*domain.Job, error) {
+func (r *jobRepository) FindJob(id uint) (*domain.Job, error) {
 	var job *domain.Job
 
-	err := j.db.First(&job, id).Error
+	err := r.db.First(&job, id).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -52,11 +52,11 @@ func (j *jobRepository) FindJob(id uint) (*domain.Job, error) {
 	return job, nil
 }
 
-func (j *jobRepository) SearchJobs(keyword string) ([]*domain.Job, error) {
+func (r *jobRepository) SearchJobs(keyword string) ([]*domain.Job, error) {
 	var jobs []*domain.Job
 
 	query := "%" + keyword + "%"
-	err := j.db.Where("title ILIKE ? OR company ILIKE ? OR location ILIKE ? OR category ILIKE ?", query, query, query, query).
+	err := r.db.Where("title ILIKE ? OR company ILIKE ? OR location ILIKE ? OR category ILIKE ?", query, query, query, query).
 		Order("created_at DESC").
 		Limit(50).
 		Find(&jobs).Error

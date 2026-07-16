@@ -5,7 +5,7 @@ DB_CONTAINER=backend-postgres-1
 DB_USER=root
 DB_NAME=job-radar
 
-Schema:
+schema:
 	docker exec $(DB_CONTAINER) \
 		pg_dump \
 		-U $(DB_USER) \
