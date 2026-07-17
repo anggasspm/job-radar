@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -30,6 +32,11 @@ func (a *Auth) HashPassword(p string) (string, error) {
 	}
 
 	return string(hashP), nil
+}
+
+func (a *Auth) HashToken(t string) (string, error) {
+	hash := sha256.Sum256([]byte(t))
+	return hex.EncodeToString(hash[:]), nil
 }
 
 func (a Auth) VerifyPassword(pP string, hP string) error {

@@ -106,3 +106,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 	})
 
 }
+
+func (h *UserHandler) RefreshToken(c *gin.Context) {
+	
+}

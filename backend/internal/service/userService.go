@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/anggasspm/job-radar/backend/internal/domain"
 	"github.com/anggasspm/job-radar/backend/internal/dto"
@@ -49,6 +50,19 @@ func (s *UserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error
 	if err != nil {
 		return nil, err
 	}
+
+	hashedToken, err := s.Auth.HashToken(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	expiresAt := time.Now().Add(24 * time.Hour * 7)
+
+	err = s.Repo.SaveRefreshToken(&domain.RefreshToken{
+		UserID:     user.ID,
+		Token_hash: hashedToken,
+		ExpiresAt:  expiresAt,
+	})
 
 	return &dto.UserSignupResponse{
 		User: dto.UserResponse{

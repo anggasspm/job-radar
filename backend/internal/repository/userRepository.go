@@ -12,6 +12,7 @@ import (
 type UserRepository interface {
 	CreateUser(u *domain.User) (*domain.User, error)
 	FindUserByEmail(email string) (*domain.User, error)
+	SaveRefreshToken(rf *domain.RefreshToken) error
 }
 
 type userRepository struct {
@@ -50,4 +51,15 @@ func (r *userRepository) FindUserByEmail(email string) (*domain.User, error) {
 		return nil, fmt.Errorf("find user %s: %w", email, err)
 	}
 	return &user, nil
+}
+
+// Save the refreshToken to the database
+func (r *userRepository) SaveRefreshToken(rf *domain.RefreshToken) error {
+	if err := r.db.Create(rf).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+	}
+
+	return nil
 }
