@@ -12,7 +12,9 @@ import (
 type UserRepository interface {
 	CreateUser(u *domain.User) (*domain.User, error)
 	FindUserByEmail(email string) (*domain.User, error)
+	FindUserById(id uint) (*domain.User, error)
 	SaveRefreshToken(rf *domain.RefreshToken) error
+	FindToken(rf *domain.RefreshToken) (*domain.RefreshToken, error)
 }
 
 type userRepository struct {
@@ -53,6 +55,20 @@ func (r *userRepository) FindUserByEmail(email string) (*domain.User, error) {
 	return &user, nil
 }
 
+func (r *userRepository) FindUserById(id uint) (*domain.User, error) {
+	var user domain.User
+
+	err := r.db.First(&user, "id=?", id).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("find user %s: %w", id, domain.ErrUserNotFound)
+		}
+		return nil, fmt.Errorf("find user %s: %w", id, err)
+	}
+	return &user, nil
+}
+
 // Save the refreshToken to the database
 func (r *userRepository) SaveRefreshToken(rf *domain.RefreshToken) error {
 	if err := r.db.Create(rf).Error; err != nil {
@@ -62,4 +78,19 @@ func (r *userRepository) SaveRefreshToken(rf *domain.RefreshToken) error {
 	}
 
 	return nil
+}
+
+func (r *userRepository) FindToken(rf *domain.RefreshToken) (*domain.RefreshToken, error) {
+	var token domain.RefreshToken
+
+	err := r.db.First(&token, "token_hash=?", rf.Token_hash).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("find user %s: %w", rf, err)
+		}
+		return nil, fmt.Errorf("find user %s: %w", rf, err)
+	}
+
+	return &token, nil
 }

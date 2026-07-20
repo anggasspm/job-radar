@@ -86,7 +86,7 @@ func (a *Auth) VerifyToken(t string) (*domain.User, error) {
 	// extract the token
 	tokenArr := strings.Split(t, " ")
 	if len(tokenArr) != 2 {
-		return &domain.User{}, nil
+		return &domain.User{}, errors.New("invalid authorization header")
 	}
 
 	tokenStr := tokenArr[1]
@@ -121,4 +121,30 @@ func (a *Auth) VerifyToken(t string) (*domain.User, error) {
 	}
 
 	return &domain.User{}, errors.New("token verification failed")
+}
+
+func (a *Auth) VerifyRefreshToken(tokenStr string) (uint, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(a.Secret), nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return 0, errors.New("invalid refresh token")
+	}
+
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		return 0, errors.New("user_id not found in token")
+	}
+
+	return uint(userID), nil
 }
