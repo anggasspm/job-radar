@@ -106,3 +106,38 @@ func (h *UserHandler) Login(c *gin.Context) {
 	})
 
 }
+
+func (h *UserHandler) RefreshToken(c *gin.Context) {
+	var req dto.RefreshToken
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON((http.StatusBadRequest), gin.H{
+			"error": err.Error(),
+		})
+
+		return
+	}
+
+	resp, err := h.svc.RefreshToken(&dto.RefreshToken{
+		RefreshToken: req.RefreshToken,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrUserNotFound):
+			c.JSON(http.StatusConflict, gin.H{"error": "Token not found. Try register"})
+		default:
+			log.Printf("signup error: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	// response
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Token refreshed",
+		"data": &dto.RefreshTokenResponse{
+			AccessToken: resp.AccessToken,
+		},
+	})
+}
