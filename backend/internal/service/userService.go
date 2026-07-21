@@ -14,12 +14,14 @@ import (
 type UserService struct {
 	Repo repository.UserRepository
 	Auth helper.Auth
+	// Redis *redis.Client
 }
 
 func NewUserService(Repo repository.UserRepository, auth helper.Auth) *UserService {
 	return &UserService{
 		Repo: Repo,
 		Auth: auth,
+		// Redis: Redis,
 	}
 }
 

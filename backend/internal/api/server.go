@@ -1,9 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/anggasspm/job-radar/backend/cache"
 	"github.com/anggasspm/job-radar/backend/config"
 	"github.com/anggasspm/job-radar/backend/internal/api/module"
 	"github.com/anggasspm/job-radar/backend/internal/api/rest"
@@ -39,10 +41,13 @@ func StartServer(cfg config.AppConfig) {
 	}
 	log.Println("Database connected!")
 
+	redisClient := cache.NewRedis(fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort), "", 0)
+
 	rh := &rest.RestHandler{
-		App:  app,
-		DB:   db,
-		Auth: helper.SetupAuth(cfg.AppSecret),
+		App:   app,
+		DB:    db,
+		Auth:  helper.SetupAuth(cfg.AppSecret),
+		Redis: redisClient.RedisClient,
 	}
 
 	app.GET("/swagger/*any",

@@ -1,6 +1,7 @@
 package module
 
 import (
+	"github.com/anggasspm/job-radar/backend/cache"
 	"github.com/anggasspm/job-radar/backend/internal/api/rest"
 	"github.com/anggasspm/job-radar/backend/internal/api/rest/handlers"
 	"github.com/anggasspm/job-radar/backend/internal/repository"
@@ -10,7 +11,8 @@ import (
 
 func SetupFavoriteModule(rh *rest.RestHandler) {
 	favoriteRepo := repository.NewFavoriteRepository(rh.DB)
-	favoriteService := service.NewFavService(favoriteRepo)
+	favoriteCache := cache.NewFavoriteCache(rh.Redis)
+	favoriteService := service.NewFavService(favoriteRepo, favoriteCache)
 	favoriteHandler := handlers.NewFavoriteHandler(favoriteService)
 	routes.SetupFavoriteRoutes(rh, favoriteHandler)
 
