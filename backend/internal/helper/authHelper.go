@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/anggasspm/job-radar/backend/internal/domain"
@@ -83,20 +82,8 @@ func (a *Auth) GenerateRefreshToken(id uint) (string, error) {
 
 // create a jwt verifyToken and authorize that is contains gin.context because router only accepts gin handler func
 func (a *Auth) VerifyToken(t string) (*domain.User, error) {
-	// extract the token
-	tokenArr := strings.Split(t, " ")
-	if len(tokenArr) != 2 {
-		return &domain.User{}, errors.New("invalid authorization header")
-	}
-
-	tokenStr := tokenArr[1]
-
-	if tokenArr[0] != "Bearer" {
-		return &domain.User{}, errors.New("invalid token")
-	}
-
 	// verify
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unknown signing method %v", token.Header)
 		}
@@ -108,11 +95,6 @@ func (a *Auth) VerifyToken(t string) (*domain.User, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-
-		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			return &domain.User{}, errors.New("token is expired")
-		}
-
 		user := domain.User{}
 		user.ID = uint(claims["user_id"].(float64))
 		user.Email = claims["email"].(string)
