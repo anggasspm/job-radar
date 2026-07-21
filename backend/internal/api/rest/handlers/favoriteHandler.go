@@ -22,7 +22,7 @@ func NewFavoriteHandler(svc *service.FavoriteService) *FavoriteHandler {
 func (h *FavoriteHandler) GetFavoritesByUser(c *gin.Context) {
 	userId := c.GetUint("userID")
 
-	favoritesByUser, err := h.svc.GetFavsByUser(uint(userId))
+	favoritesByUser, err := h.svc.GetFavsByUser(c.Request.Context(), uint(userId))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -50,7 +50,7 @@ func (h *FavoriteHandler) AddToFavorites(c *gin.Context) {
 		JobID:  jobId,
 	}
 
-	favorite, err := h.svc.AddToFavs(fav)
+	favorite, err := h.svc.AddToFavs(c.Request.Context(), fav)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -79,7 +79,7 @@ func (h *FavoriteHandler) DeleteFromFavorites(c *gin.Context) {
 		JobID:  jobId,
 	}
 
-	err = h.svc.DeleteFromFavs(fav)
+	err = h.svc.DeleteFromFavs(c.Request.Context(), fav)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
