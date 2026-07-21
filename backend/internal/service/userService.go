@@ -131,13 +131,14 @@ func (s *UserService) Login(req dto.UserLogin) (*dto.UserSigninResponse, error) 
 
 }
 
-func (s *UserService) RefreshToken(req *dto.RefreshToken) (*dto.RefreshTokenResponse, error) {
-	// get user id
-	userID, err := s.Auth.VerifyRefreshToken(req.RefreshToken)
+func (s *UserService) RefreshToken(refreshToken string) (*dto.RefreshTokenResponse, error) {
+	userID, err := s.Auth.VerifyRefreshToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
 
 	// hash token
-	hashedToken, err := s.Auth.HashToken(req.RefreshToken)
-
+	hashedToken, err := s.Auth.HashToken(refreshToken)
 	if err != nil {
 		return nil, err
 	}

@@ -53,14 +53,20 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Set cookies for access token
+	c.SetCookie("access_token", resp.AccessToken, 15*60, "/", "", false, true)
+
+	// Set cookies for refresh token
+	c.SetCookie("refresh_token", resp.RefreshToken, 7*24*60*60, "/", "", false, true)
+
 	// response if success
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Register successful",
-		"data": &dto.UserSignupResponse{
-			User:         resp.User,
-			AccessToken:  resp.AccessToken,
-			RefreshToken: resp.RefreshToken,
-		},
+		// "data": &dto.UserSignupResponse{
+		// 	User:         resp.User,
+		// 	AccessToken:  resp.AccessToken,
+		// 	RefreshToken: resp.RefreshToken,
+		// },
 	})
 }
 
@@ -95,32 +101,34 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Set cookies for access token
+	c.SetCookie("access_token", resp.AccessToken, 15*60, "/", "", false, true)
+
+	// Set cookies for refresh token
+	c.SetCookie("refresh_token", resp.RefreshToken, 7*24*60*60, "/", "", false, true)
+
 	// response if success
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
-		"data": &dto.UserSigninResponse{
-			User:         resp.User,
-			AccessToken:  resp.AccessToken,
-			RefreshToken: resp.RefreshToken,
-		},
+		// "data": &dto.UserSigninResponse{
+		// 	User:         resp.User,
+		// 	AccessToken:  resp.AccessToken,
+		// 	RefreshToken: resp.RefreshToken,
+		// },
 	})
 
 }
 
 func (h *UserHandler) RefreshToken(c *gin.Context) {
-	var req dto.RefreshToken
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON((http.StatusBadRequest), gin.H{
-			"error": err.Error(),
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Refresh token not found",
 		})
-
 		return
 	}
 
-	resp, err := h.svc.RefreshToken(&dto.RefreshToken{
-		RefreshToken: req.RefreshToken,
-	})
+	resp, err := h.svc.RefreshToken(refreshToken)
 
 	if err != nil {
 		switch {
@@ -133,11 +141,14 @@ func (h *UserHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
+	// Set cookies for access token
+	c.SetCookie("access_token", resp.AccessToken, 15*60, "/", "", false, true)
+
 	// response
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Token refreshed",
-		"data": &dto.RefreshTokenResponse{
-			AccessToken: resp.AccessToken,
-		},
+		// "data": &dto.RefreshTokenResponse{
+		// 	AccessToken: resp.AccessToken,
+		// },
 	})
 }

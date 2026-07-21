@@ -1,24 +1,26 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/anggasspm/job-radar/backend/internal/helper"
 	"github.com/gin-gonic/gin"
 )
 
-func Authorize(a *helper.Auth) gin.HandlerFunc {
+func AuthorizeAccessToken(a *helper.Auth) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
-		authHeader := c.GetHeader("Authorization")
+		accessToken, err := c.Cookie("access_token")
 
-		if authHeader == "" {
-			c.AbortWithStatusJSON(401, gin.H{
-				"message": "missing authorization header",
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": "Access token not found",
 			})
 			return
 		}
 
-		user, err := a.VerifyToken(authHeader)
+		user, err := a.VerifyToken(accessToken)
 
 		if err != nil {
 			c.AbortWithStatusJSON(401, gin.H{
@@ -33,3 +35,4 @@ func Authorize(a *helper.Auth) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
