@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthorizeAccessToken(a *helper.Auth) gin.HandlerFunc {
+func AuthorizeAccessToken(a helper.Auth) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
