@@ -7,15 +7,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/anggasspm/job-radar/backend/internal/domain"
 	"github.com/anggasspm/job-radar/backend/internal/dto"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
-type MockUserService struct{}
+type MockUserService struct {
+	SignUpFunc func(req dto.UserSignup) (*dto.UserSignupResponse, error)
+}
 
 // Mock service
 func (m *MockUserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error) {
+	if m.SignUpFunc != nil {
+		return m.SignUpFunc(req)
+	}
 	return &dto.UserSignupResponse{
 		User: dto.UserResponse{
 			ID:    1,
@@ -69,7 +75,7 @@ func TestRegister_Success(t *testing.T) {
 
 	// store status code, headher, body, etc
 	w := httptest.NewRecorder()
-	
+
 	// shoot the request to the router
 	router.ServeHTTP(w, req)
 
@@ -125,3 +131,30 @@ func TestRegister_EmptyBody(t *testing.T) {
 
 }
 
+func TestRegister_EmailAlreadyExist(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := &MockUserService{
+		SignUpFunc: func(req dto.UserSignup) (*dto.UserSignupResponse, error) {
+			return nil, domain.ErrEmailAlreadyExists
+		},
+	}
+
+	handler := NewUserHandler(mockService)
+	router := gin.New()
+	router.POST("/register", handler.Register)
+
+	body := dto.UserSignup{
+		UserLogin: dto.UserLogin{Email: "arif@gmail.com", Password: "123456"},
+		Name:      "Arif",
+	}
+	jsonBody, _ := json.Marshal(body)
+	req, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusConflict, w.Code)
+	assert.Contains(t, w.Body.String(), "email already registered. Try logging in")
+}
