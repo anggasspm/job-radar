@@ -11,14 +11,20 @@ import (
 	"github.com/anggasspm/job-radar/backend/internal/repository"
 )
 
-type UserService struct {
+type UserService interface {
+	SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error)
+	Login(req dto.UserLogin) (*dto.UserSigninResponse, error)
+	RefreshToken(token string) (*dto.RefreshTokenResponse, error)
+}
+
+type userService struct {
 	Repo repository.UserRepository
 	Auth helper.Auth
 	// Redis *redis.Client
 }
 
-func NewUserService(Repo repository.UserRepository, auth helper.Auth) *UserService {
-	return &UserService{
+func NewUserService(Repo repository.UserRepository, auth helper.Auth) UserService {
+	return &userService{
 		Repo: Repo,
 		Auth: auth,
 		// Redis: Redis,
@@ -27,7 +33,7 @@ func NewUserService(Repo repository.UserRepository, auth helper.Auth) *UserServi
 
 // change to dto
 // can add more context to error from helper rather than just generic error from helper
-func (s *UserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error) {
+func (s *userService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error) {
 	passwordHash, err := s.Auth.HashPassword(req.Password)
 
 	if err != nil {
@@ -82,7 +88,7 @@ func (s *UserService) SignUp(req dto.UserSignup) (*dto.UserSignupResponse, error
 }
 
 // login
-func (s *UserService) Login(req dto.UserLogin) (*dto.UserSigninResponse, error) {
+func (s *userService) Login(req dto.UserLogin) (*dto.UserSigninResponse, error) {
 	user, err := s.Repo.FindUserByEmail(req.Email)
 
 	if err != nil {
@@ -133,7 +139,7 @@ func (s *UserService) Login(req dto.UserLogin) (*dto.UserSigninResponse, error) 
 
 }
 
-func (s *UserService) RefreshToken(refreshToken string) (*dto.RefreshTokenResponse, error) {
+func (s *userService) RefreshToken(refreshToken string) (*dto.RefreshTokenResponse, error) {
 	userID, err := s.Auth.VerifyRefreshToken(refreshToken)
 	if err != nil {
 		return nil, err
