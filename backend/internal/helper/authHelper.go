@@ -12,18 +12,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Auth struct {
+type Auth interface {
+	HashPassword(p string) (string, error)
+	HashToken(t string) (string, error)
+	VerifyPassword(pP string, hP string) error
+	GenerateAccessToken(id uint, email string, tier string) (string, error)
+	GenerateRefreshToken(id uint) (string, error)
+	VerifyToken(t string) (*domain.User, error)
+	VerifyRefreshToken(tokenStr string) (uint, error)
+}
+
+type auth struct {
 	Secret string
 }
 
 // injector
 
 func SetupAuth(s string) Auth {
-	return Auth{
+	return &auth{
 		Secret: s,
 	}
 }
-func (a *Auth) HashPassword(p string) (string, error) {
+func (a *auth) HashPassword(p string) (string, error) {
 	hashP, err := bcrypt.GenerateFromPassword([]byte(p), 10)
 
 	if err != nil {
@@ -33,12 +43,12 @@ func (a *Auth) HashPassword(p string) (string, error) {
 	return string(hashP), nil
 }
 
-func (a *Auth) HashToken(t string) (string, error) {
+func (a *auth) HashToken(t string) (string, error) {
 	hash := sha256.Sum256([]byte(t))
 	return hex.EncodeToString(hash[:]), nil
 }
 
-func (a Auth) VerifyPassword(pP string, hP string) error {
+func (a *auth) VerifyPassword(pP string, hP string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hP), []byte(pP))
 
 	if err != nil {
@@ -48,7 +58,7 @@ func (a Auth) VerifyPassword(pP string, hP string) error {
 	return nil
 }
 
-func (a *Auth) GenerateAccessToken(id uint, email string, tier string) (string, error) {
+func (a *auth) GenerateAccessToken(id uint, email string, tier string) (string, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": id,
 		"email":   email,
@@ -65,7 +75,7 @@ func (a *Auth) GenerateAccessToken(id uint, email string, tier string) (string, 
 	return tokenStr, nil
 }
 
-func (a *Auth) GenerateRefreshToken(id uint) (string, error) {
+func (a *auth) GenerateRefreshToken(id uint) (string, error) {
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": id,
 		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(),
@@ -81,7 +91,7 @@ func (a *Auth) GenerateRefreshToken(id uint) (string, error) {
 }
 
 // create a jwt verifyToken and authorize that is contains gin.context because router only accepts gin handler func
-func (a *Auth) VerifyToken(t string) (*domain.User, error) {
+func (a *auth) VerifyToken(t string) (*domain.User, error) {
 	// verify
 	token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -105,7 +115,7 @@ func (a *Auth) VerifyToken(t string) (*domain.User, error) {
 	return &domain.User{}, errors.New("token verification failed")
 }
 
-func (a *Auth) VerifyRefreshToken(tokenStr string) (uint, error) {
+func (a *auth) VerifyRefreshToken(tokenStr string) (uint, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
