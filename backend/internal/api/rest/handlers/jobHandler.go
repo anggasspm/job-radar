@@ -69,7 +69,7 @@ func (h *JobHandler) GetJobById(c *gin.Context) {
 				"error": "job not found",
 			})
 		default:
-			log.Printf("find job error: %w", err)
+			log.Printf("find job error: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 			})
