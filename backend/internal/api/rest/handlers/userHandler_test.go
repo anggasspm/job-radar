@@ -67,9 +67,10 @@ func TestRegister_Success(t *testing.T) {
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 
-	// record status code, headher, body, etc
-	// shoot the request to the router
+	// store status code, headher, body, etc
 	w := httptest.NewRecorder()
+	
+	// shoot the request to the router
 	router.ServeHTTP(w, req)
 
 	// check the result
@@ -87,6 +88,7 @@ func TestRegister_Success(t *testing.T) {
 	var accessFound bool
 	var refreshFound bool
 
+	// loop all cookies
 	for _, cookie := range cookies {
 		switch cookie.Name {
 		case "access_token":
@@ -101,5 +103,25 @@ func TestRegister_Success(t *testing.T) {
 
 	assert.True(t, accessFound)
 	assert.True(t, refreshFound)
+}
+
+func TestRegister_EmptyBody(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := &MockUserService{}
+
+	handler := NewUserHandler(mockService)
+
+	router := gin.Default()
+	router.POST("/register", handler.Register)
+
+	req, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer([]byte(""))) // empty body
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
 }
 
