@@ -10,6 +10,7 @@ import (
 	"github.com/anggasspm/job-radar/backend/internal/api/module"
 	"github.com/anggasspm/job-radar/backend/internal/api/rest"
 	"github.com/anggasspm/job-radar/backend/internal/helper"
+	"github.com/anggasspm/job-radar/backend/internal/security"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -42,12 +43,14 @@ func StartServer(cfg config.AppConfig) {
 	log.Println("Database connected!")
 
 	redisClient := cache.NewRedis(fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort), "", 0)
+	redisLimiter := security.NewRedisRateLimiter(redisClient)
 
 	rh := &rest.RestHandler{
-		App:   app,
-		DB:    db,
-		Auth:  helper.SetupAuth(cfg.AppSecret),
-		Redis: redisClient.RedisClient,
+		App:     app,
+		DB:      db,
+		Auth:    helper.SetupAuth(cfg.AppSecret),
+		Redis:   redisClient.RedisClient,
+		Limiter: redisLimiter,
 	}
 
 	app.GET("/swagger/*any",

@@ -10,7 +10,7 @@ func SetupFavoriteRoutes(rh *rest.RestHandler, h *handlers.FavoriteHandler) {
 	favoriteRouter := rh.App.Group("/favorite")
 
 	protected := favoriteRouter.Group("/")
-	protected.Use(middleware.AuthorizeAccessToken(&rh.Auth))
+	protected.Use(middleware.AuthorizeAccessToken(&rh.Auth), middleware.RateLimiter(rh.Limiter, "favorite"))
 
 	{
 		protected.GET("/", h.GetFavoritesByUser)
